@@ -13,15 +13,14 @@ export default function Home() {
   const currentUserVideoRef = useRef(null);
   const peerInstance = useRef(null);
   const backendServerUrlHandler = () => {
-    if(process.env.NODE_ENV === 'development'){
-      return 'http://localhost:8080'
+    if (process.env.NODE_ENV === "development") {
+      return "http://localhost:8080";
+    } else {
+      return "https://codermeetbackend.vercel.app";
     }
-    else{
-      return 'https://codermeetbackend.vercel.app/'
-    }
-  }
+  };
   useEffect(() => {
-    console.log(process.env.NODE_ENV)
+    console.log(process.env.NODE_ENV);
     const peer = new Peer();
     peer.on("open", (id) => {
       setCurrentUserId(id);
@@ -45,7 +44,7 @@ export default function Home() {
 
     peerInstance.current = peer;
   }, []);
-  
+
   async function pushIdToBackend(id) {
     try {
       const response = await fetch(`${backendServerUrlHandler()}/saveIds`, {
@@ -94,16 +93,18 @@ export default function Home() {
     } else return;
   }
 
-  async function nextUserHandler(){
-    console.log(backendServerUrlHandler())
+  async function nextUserHandler() {
+    console.log(backendServerUrlHandler());
     const response = await fetch(`${backendServerUrlHandler()}/allIds`, {
-      method: 'GET',
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-    })
-    const allIds = await response.json()
-    const allIdsFiltered = allIds.data.filter((e)=>{return e!==currentUserId})
+    });
+    const allIds = await response.json();
+    const allIdsFiltered = allIds.data.filter((e) => {
+      return e !== currentUserId;
+    });
     call(allIdsFiltered[0]);
   }
 
