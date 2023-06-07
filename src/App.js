@@ -13,6 +13,7 @@ export default function Home() {
   const currentUserVideoRef = useRef(null);
   const peerInstance = useRef(null);
   const backendServerUrlHandler = () => {
+    console.log(NODE_ENV)
     if (process.env.NODE_ENV === "development") {
       return "http://localhost:8080";
     } else {
