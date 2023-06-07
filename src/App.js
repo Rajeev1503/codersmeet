@@ -101,7 +101,7 @@ export default function Home() {
     const allIdsFiltered = allIds.data.filter((e) => {
       return e !== currentUserId;
     });
-    call(allIdsFiltered[0]);
+    call(allIdsFiltered[(Math.floor(Math.random() * allIdsFiltered.length))]);
   }
 
   return (
