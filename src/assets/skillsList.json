@@ -1,0 +1,20 @@
+{
+  "web_developer": [
+    "react",
+    "html",
+    "css",
+    "JavaScript",
+    "Nodejs",
+    "Django",
+    "Flask",
+    "Java Spring Boot"
+  ],
+  "app_developer": [
+    "flutter",
+    "dart",
+    "react native",
+    "Swift",
+    "Android Java",
+    "Ruby On Rails"
+  ]
+}
