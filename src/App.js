@@ -42,6 +42,9 @@ export default function Home() {
   }, []);
 
   async function pushIdToBackend(id) {
+    const idJson = {
+      id: id
+    }
     try {
       const response = await fetch(`${serverUrl}/saveids`, {
         method: "POST",
@@ -49,7 +52,7 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         mode: "no-cors",
-        body: JSON.stringify({ id: id })
+        body: JSON.stringify(idJson)
       });
 
 
