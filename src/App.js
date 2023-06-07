@@ -49,8 +49,11 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         mode: "no-cors",
-        body: JSON.stringify({ id })
+        body: JSON.stringify({ id: id })
       });
+
+
+
     } catch (err) {
       console.log(err);
     }
