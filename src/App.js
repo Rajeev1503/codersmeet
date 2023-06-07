@@ -6,7 +6,10 @@ import ControlsScreen from "./components/screens/controlsScreen";
 import ChatScreen from "./components/screens/chatScreen";
 import { useEffect, useRef, useState } from "react";
 import Peer from "peerjs";
-const serverUrl = process.env.NODE_ENV === "development" ? "http://localhost:8080":"https://codermeetbackend.vercel.app"
+const serverUrl =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:8080"
+    : "https://codermeetbackend.vercel.app";
 export default function Home() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const remoteVideoRef = useRef(null);
@@ -42,6 +45,7 @@ export default function Home() {
     try {
       const response = await fetch(`${serverUrl}/saveIds`, {
         method: "POST",
+        mode: "no-cors",
         body: JSON.stringify({ id }),
       });
 
@@ -85,7 +89,8 @@ export default function Home() {
 
   async function nextUserHandler() {
     const response = await fetch(`${serverUrl}/allIds`, {
-      method: "GET"
+      method: "GET",
+      mode: "no-cors",
     });
     const allIds = await response.json();
     const allIdsFiltered = allIds.data.filter((e) => {
