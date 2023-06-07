@@ -9,7 +9,7 @@ import Peer from "peerjs";
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
-    : "https://codermeetbackend.vercel.app";
+    : "https://codersmeetbackend.vercel.app";
 export default function Home() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const remoteVideoRef = useRef(null);
