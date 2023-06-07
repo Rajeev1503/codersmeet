@@ -17,7 +17,9 @@ export default function Home() {
   const peerInstance = useRef(null);
 
   useEffect(() => {
-    const peer = new Peer();
+    const peer = new Peer({
+      config: { iceServers: [{ url: "stun:stun.l.google.com:19302" }] },
+    });
     peer.on("open", (id) => {
       setCurrentUserId(id);
       pushIdToBackend(id);
@@ -42,18 +44,16 @@ export default function Home() {
   }, []);
 
   async function pushIdToBackend(id) {
-
     try {
       const response = await fetch(`${serverUrl}/saveids`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({id})
+        body: JSON.stringify({ id }),
       });
       const result = await response.json();
-      console.log(result)
-
+      console.log(result);
     } catch (err) {
       console.log(err);
     }
@@ -91,18 +91,20 @@ export default function Home() {
   }
 
   async function nextUserHandler() {
+    // closeCurrentCall()
     const response = await fetch(`${serverUrl}/allids`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-      }
+      },
     });
     const allIds = await response.json();
     const allIdsFiltered = allIds.data.filter((e) => {
       return e !== currentUserId;
     });
-    const randomRemoteUserId = allIdsFiltered[(Math.floor(Math.random() * allIdsFiltered.length))]
-    console.log(randomRemoteUserId)
+    const randomRemoteUserId =
+      allIdsFiltered[Math.floor(Math.random() * allIdsFiltered.length)];
+    console.log(randomRemoteUserId);
     call(randomRemoteUserId);
   }
 
