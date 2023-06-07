@@ -42,20 +42,17 @@ export default function Home() {
   }, []);
 
   async function pushIdToBackend(id) {
-    const idJson = {
-      id: id
-    }
+
     try {
       const response = await fetch(`${serverUrl}/saveids`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        mode: "no-cors",
-        body: JSON.stringify(idJson)
+        body: JSON.stringify({id})
       });
-
-
+      const result = await response.json();
+      console.log(result)
 
     } catch (err) {
       console.log(err);
@@ -98,8 +95,7 @@ export default function Home() {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-      },
-      mode: "no-cors",
+      }
     });
     const allIds = await response.json();
     const allIdsFiltered = allIds.data.filter((e) => {
