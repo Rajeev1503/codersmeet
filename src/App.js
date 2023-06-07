@@ -20,7 +20,6 @@ export default function Home() {
     }
   };
   useEffect(() => {
-    console.log(process.env.NODE_ENV);
     const peer = new Peer();
     peer.on("open", (id) => {
       setCurrentUserId(id);
@@ -94,7 +93,6 @@ export default function Home() {
   }
 
   async function nextUserHandler() {
-    console.log(backendServerUrlHandler());
     const response = await fetch(`${backendServerUrlHandler()}/allIds`, {
       method: "GET",
       headers: {
