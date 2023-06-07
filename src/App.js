@@ -48,7 +48,8 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id }),
+        mode: "no-cors",
+        body: JSON.stringify({ id })
       });
 
       const result = await response.json();
@@ -95,6 +96,7 @@ export default function Home() {
       headers: {
         "Content-Type": "application/json",
       },
+      mode: "no-cors",
     });
     const allIds = await response.json();
     const allIdsFiltered = allIds.data.filter((e) => {
