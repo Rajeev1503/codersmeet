@@ -5,16 +5,23 @@ import UserScreen from "./components/screens/userScreen";
 import ControlsScreen from "./components/screens/controlsScreen";
 import ChatScreen from "./components/screens/chatScreen";
 import { useEffect, useRef, useState } from "react";
-// import { useSearchParams } from "react-router-dom";
-// import { io } from "socket.io-client";
 import Peer from "peerjs";
+
 export default function Home() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const remoteVideoRef = useRef(null);
   const currentUserVideoRef = useRef(null);
   const peerInstance = useRef(null);
-
+  const backendServerUrlHandler = () => {
+    if(process.env.NODE_ENV === 'development'){
+      return 'http://localhost:8080'
+    }
+    else{
+      return 'https://codermeetbackend.vercel.app/'
+    }
+  }
   useEffect(() => {
+    console.log(process.env.NODE_ENV)
     const peer = new Peer();
     peer.on("open", (id) => {
       setCurrentUserId(id);
@@ -38,9 +45,10 @@ export default function Home() {
 
     peerInstance.current = peer;
   }, []);
+  
   async function pushIdToBackend(id) {
     try {
-      const response = await fetch("http://localhost:8080/saveIds", {
+      const response = await fetch(`${backendServerUrlHandler()}/saveIds`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +95,8 @@ export default function Home() {
   }
 
   async function nextUserHandler(){
-    const response = await fetch('http://localhost:8080/allIds', {
+    console.log(backendServerUrlHandler())
+    const response = await fetch(`${backendServerUrlHandler()}/allIds`, {
       method: 'GET',
       headers: {
         "Content-Type": "application/json",
