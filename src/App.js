@@ -51,9 +51,6 @@ export default function Home() {
         mode: "no-cors",
         body: JSON.stringify({ id })
       });
-
-      const result = await response.json();
-      console.log(result);
     } catch (err) {
       console.log(err);
     }
