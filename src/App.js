@@ -43,7 +43,7 @@ export default function Home() {
 
   async function pushIdToBackend(id) {
     try {
-      const response = await fetch(`${serverUrl}/saveIds`, {
+      const response = await fetch(`${serverUrl}/saveids`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,7 +91,7 @@ export default function Home() {
   }
 
   async function nextUserHandler() {
-    const response = await fetch(`${serverUrl}/allIds`, {
+    const response = await fetch(`${serverUrl}/allids`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
