@@ -45,6 +45,9 @@ export default function Home() {
     try {
       const response = await fetch(`${serverUrl}/saveIds`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         mode: "no-cors",
         body: JSON.stringify({ id }),
       });
