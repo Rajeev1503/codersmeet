@@ -101,7 +101,9 @@ export default function Home() {
     const allIdsFiltered = allIds.data.filter((e) => {
       return e !== currentUserId;
     });
-    call(allIdsFiltered[(Math.floor(Math.random() * allIdsFiltered.length))]);
+    const randomRemoteUserId = allIdsFiltered[(Math.floor(Math.random() * allIdsFiltered.length))]
+    console.log(randomRemoteUserId)
+    call(randomRemoteUserId);
   }
 
   return (
