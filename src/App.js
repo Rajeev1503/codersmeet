@@ -48,7 +48,6 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        mode: "no-cors",
         body: JSON.stringify({ id }),
       });
 
@@ -93,7 +92,9 @@ export default function Home() {
   async function nextUserHandler() {
     const response = await fetch(`${serverUrl}/allIds`, {
       method: "GET",
-      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
     const allIds = await response.json();
     const allIdsFiltered = allIds.data.filter((e) => {
