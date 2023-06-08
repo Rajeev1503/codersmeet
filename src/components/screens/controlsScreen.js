@@ -56,6 +56,12 @@ export default function ControlsScreen(props) {
         </span>
         Chats
       </div>
+      <div className="cursor-pointer rounded-full p-1 flex flex-row gap-1 items-center justify-center px-3 pr-5 text-sm bg-white text-black font-semibold" onClick={props.closeCurrentCall}>
+        <span className="text-2xl">
+        close call
+        </span>
+      </div>
+      
     </div>
   );
 }

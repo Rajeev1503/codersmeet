@@ -6,22 +6,23 @@ import ControlsScreen from "./components/screens/controlsScreen";
 import ChatScreen from "./components/screens/chatScreen";
 import { useEffect, useRef, useState } from "react";
 import Peer from "peerjs";
+let peer, currentUserId
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
     : "https://codersmeetbackend.vercel.app";
+
 export default function Home() {
-  const [currentUserId, setCurrentUserId] = useState(null);
   const remoteVideoRef = useRef(null);
   const currentUserVideoRef = useRef(null);
-  const peerInstance = useRef(null);
 
   useEffect(() => {
-    const peer = new Peer({
+
+    peer = new Peer({
       config: { iceServers: [{ url: "stun:stun.l.google.com:19302" }] },
     });
     peer.on("open", (id) => {
-      setCurrentUserId(id);
+      currentUserId = id;
       pushIdToBackend(id);
     });
 
@@ -40,8 +41,34 @@ export default function Home() {
       });
     });
 
-    peerInstance.current = peer;
+    peer.on("disconnected", () => {
+      handlePeerClose();
+    });
+
+    window.addEventListener('beforeunload', ()=>{
+      peer.disconnect();
+    })
+
   }, []);
+
+  // peerjs connection functions
+
+  async function handlePeerClose() {
+    try {
+      console.log('here')
+      const response = await fetch(`${serverUrl}/deleteids`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ currentUserId }),
+      });
+      const result = await response.json();
+      console.log(result);
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
   async function pushIdToBackend(id) {
     try {
@@ -59,7 +86,7 @@ export default function Home() {
     }
   }
 
-  const call = (remotePeerId) => {
+  const callRemoteUser = (remotePeerId) => {
     var getUserMedia =
       navigator.getUserMedia ||
       navigator.webkitGetUserMedia ||
@@ -67,14 +94,31 @@ export default function Home() {
 
     getUserMedia({ video: true, audio: false }, (mediaStream) => {
       currentUserVideoRef.current.srcObject = mediaStream;
-
-      const call = peerInstance.current.call(remotePeerId, mediaStream);
-
+      const call = peer.call(remotePeerId, mediaStream);
       call.on("stream", (remoteStream) => {
         remoteVideoRef.current.srcObject = remoteStream;
       });
     });
   };
+
+  async function nextUserHandler() {
+    const response = await fetch(`${serverUrl}/allids`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const allIds = await response.json();
+    const allIdsFiltered = allIds.data.filter((e) => {
+      return e !== currentUserId;
+    });
+    const randomRemoteUserId =
+      allIdsFiltered[Math.floor(Math.random() * allIdsFiltered.length)];
+    callRemoteUser(randomRemoteUserId);
+  }
+
+
+  // component functions and variables
 
   const [friendMaxLayout, setFriendMaxLayout] = useState(false);
   const [userMaxLayout, setUserMaxLayout] = useState(false);
@@ -90,29 +134,11 @@ export default function Home() {
     } else return;
   }
 
-  async function nextUserHandler() {
-    // closeCurrentCall()
-    const response = await fetch(`${serverUrl}/allids`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const allIds = await response.json();
-    const allIdsFiltered = allIds.data.filter((e) => {
-      return e !== currentUserId;
-    });
-    const randomRemoteUserId =
-      allIdsFiltered[Math.floor(Math.random() * allIdsFiltered.length)];
-    console.log(randomRemoteUserId);
-    call(randomRemoteUserId);
-  }
-
   return (
     <main className="bg-[#000] h-[100vh] w-full">
       <div className="h-[6%] flex flex-row justify-between items-center border-b border-[#222] w-full">
         <QuestionBar />
-        <div className="text-white">{currentUserId}</div>
+        {/* <div className="text-white">{currentUserId}</div> */}
       </div>
       <div className="h-[94%] w-full flex flex-row  ">
         <div className="w-[4%] h-full border-r border-[#222]">
