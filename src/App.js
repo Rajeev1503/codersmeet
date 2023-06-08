@@ -17,6 +17,9 @@ export default function Home() {
   const currentUserVideoRef = useRef(null);
 
   useEffect(() => {
+    window.addEventListener('beforeunload', ()=>{
+      peer.disconnect();
+    })
 
     peer = new Peer({
       config: { iceServers: [{ url: "stun:stun.l.google.com:19302" }] },
@@ -45,17 +48,12 @@ export default function Home() {
       handlePeerClose();
     });
 
-    window.addEventListener('beforeunload', ()=>{
-      peer.disconnect();
-    })
-
   }, []);
 
   // peerjs connection functions
 
   async function handlePeerClose() {
     try {
-      console.log('here')
       const response = await fetch(`${serverUrl}/deleteids`, {
         method: "POST",
         headers: {
