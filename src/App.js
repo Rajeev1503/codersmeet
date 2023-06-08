@@ -6,7 +6,7 @@ import ControlsScreen from "./components/screens/controlsScreen";
 import ChatScreen from "./components/screens/chatScreen";
 import { useEffect, useRef, useState } from "react";
 import Peer from "peerjs";
-let peer, currentUserId;
+let peer, currentUserId, currentRemoteUserId, randomRemoteUserId;
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
@@ -111,8 +111,13 @@ export default function Home() {
     const allIdsFiltered = allIds.data.filter((e) => {
       return e !== currentUserId;
     });
-    const randomRemoteUserId =
-      allIdsFiltered[Math.floor(Math.random() * allIdsFiltered.length)];
+
+    const arrLength = allIdsFiltered.length;
+
+    do {
+      randomRemoteUserId =
+        allIdsFiltered[Math.floor(Math.random() * arrLength)];
+    } while (randomRemoteUserId == currentRemoteUserId);
     callRemoteUser(randomRemoteUserId);
   }
 
