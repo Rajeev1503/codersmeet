@@ -6,7 +6,7 @@ import ControlsScreen from "./components/screens/controlsScreen";
 import ChatScreen from "./components/screens/chatScreen";
 import { useEffect, useRef, useState } from "react";
 import Peer from "peerjs";
-let peer, currentUserId
+let peer, currentUserId;
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
@@ -17,10 +17,6 @@ export default function Home() {
   const currentUserVideoRef = useRef(null);
 
   useEffect(() => {
-    window.addEventListener('beforeunload', ()=>{
-      peer.disconnect();
-    })
-
     peer = new Peer({
       config: { iceServers: [{ url: "stun:stun.l.google.com:19302" }] },
     });
@@ -48,6 +44,9 @@ export default function Home() {
       handlePeerClose();
     });
 
+    window.addEventListener("beforeunload", () => {
+      peer.disconnect();
+    });
   }, []);
 
   // peerjs connection functions
@@ -56,6 +55,8 @@ export default function Home() {
     try {
       const response = await fetch(`${serverUrl}/deleteids`, {
         method: "POST",
+
+        keepalive: true,
         headers: {
           "Content-Type": "application/json",
         },
@@ -114,7 +115,6 @@ export default function Home() {
       allIdsFiltered[Math.floor(Math.random() * allIdsFiltered.length)];
     callRemoteUser(randomRemoteUserId);
   }
-
 
   // component functions and variables
 
