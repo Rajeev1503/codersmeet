@@ -18,7 +18,12 @@ export default function Home() {
 
   useEffect(() => {
     peer = new Peer({
-      config: { iceServers: [{ url: "stun:stun.l.google.com:19302" }] },
+      config: {
+        iceServers: [
+          { url: "stun:stun.l.google.com:19302" },
+          { url: "turn:homeo@turn.bistri.com:80", credential: "homeo" },
+        ],
+      },
     });
     peer.on("open", (id) => {
       currentUserId = id;
@@ -86,6 +91,7 @@ export default function Home() {
   }
 
   const callRemoteUser = (remotePeerId) => {
+    currentRemoteUserId = remotePeerId;
     var getUserMedia =
       navigator.getUserMedia ||
       navigator.webkitGetUserMedia ||
@@ -113,11 +119,17 @@ export default function Home() {
     });
 
     const arrLength = allIdsFiltered.length;
-
-    do {
-      randomRemoteUserId =
-        allIdsFiltered[Math.floor(Math.random() * arrLength)];
-    } while (randomRemoteUserId == currentRemoteUserId);
+    const randomRemoteUserIdGenerator = () => {
+      return (randomRemoteUserId =
+        allIdsFiltered[Math.floor(Math.random() * arrLength)]);
+    };
+    if (!currentRemoteUserId) {
+      randomRemoteUserIdGenerator();
+    } else {
+      do {
+        randomRemoteUserIdGenerator();
+      } while (randomRemoteUserId == currentRemoteUserId);
+    }
     callRemoteUser(randomRemoteUserId);
   }
 
