@@ -11,7 +11,40 @@ let peer,
   currentRemoteUserId,
   randomRemoteUserId,
   mediaConnection,
-  localStream;
+  localStream,
+  videoTrack,
+  audioTrack;
+
+  const peerJsServerConfig = {
+    config: {
+      iceServers: [
+        { url: "stun:stun.l.google.com:19302" },
+        {
+          urls: "stun:a.relay.metered.ca:80",
+        },
+        {
+          urls: "turn:a.relay.metered.ca:80",
+          username: "80f2af5598002ac9a80cc167",
+          credential: "jo5Km/7SHDPnJ/0S",
+        },
+        {
+          urls: "turn:a.relay.metered.ca:80?transport=tcp",
+          username: "80f2af5598002ac9a80cc167",
+          credential: "jo5Km/7SHDPnJ/0S",
+        },
+        {
+          urls: "turn:a.relay.metered.ca:443",
+          username: "80f2af5598002ac9a80cc167",
+          credential: "jo5Km/7SHDPnJ/0S",
+        },
+        {
+          urls: "turn:a.relay.metered.ca:443?transport=tcp",
+          username: "80f2af5598002ac9a80cc167",
+          credential: "jo5Km/7SHDPnJ/0S",
+        },
+      ],
+    },
+  }
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
@@ -22,45 +55,8 @@ export default function Home() {
   const currentUserVideoRef = useRef(null);
 
   useEffect(() => {
-    var getUserMedia =
-      navigator.getUserMedia ||
-      navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia;
-    getUserMedia({ video: true, audio: true }, (mediaStream) => {
-      localStream = mediaStream;
-      currentUserVideoRef.current.srcObject = localStream;
-    });
-
-    peer = new Peer({
-      config: {
-        iceServers: [
-          { url: "stun:stun.l.google.com:19302" },
-          {
-            urls: "stun:a.relay.metered.ca:80",
-          },
-          {
-            urls: "turn:a.relay.metered.ca:80",
-            username: "80f2af5598002ac9a80cc167",
-            credential: "jo5Km/7SHDPnJ/0S",
-          },
-          {
-            urls: "turn:a.relay.metered.ca:80?transport=tcp",
-            username: "80f2af5598002ac9a80cc167",
-            credential: "jo5Km/7SHDPnJ/0S",
-          },
-          {
-            urls: "turn:a.relay.metered.ca:443",
-            username: "80f2af5598002ac9a80cc167",
-            credential: "jo5Km/7SHDPnJ/0S",
-          },
-          {
-            urls: "turn:a.relay.metered.ca:443?transport=tcp",
-            username: "80f2af5598002ac9a80cc167",
-            credential: "jo5Km/7SHDPnJ/0S",
-          },
-        ],
-      },
-    });
+    getuserMediaHandler();
+    peer = new Peer(peerJsServerConfig);
     peer.on("open", (id) => {
       currentUserId = id;
       pushIdToBackend(id);
@@ -86,6 +82,25 @@ export default function Home() {
   }, []);
 
   // peerjs connection functions
+
+  const getuserMediaHandler = () => {
+    var getUserMedia =
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia;
+    getUserMedia({ video: true, audio: true }, (mediaStream) => {
+      videoTrack = mediaStream
+        .getTracks()
+        .find((track) => track.kind === "video");
+      audioTrack = mediaStream
+        .getTracks()
+        .find((track) => track.kind === "audio");
+      currentUserVideoRef.current.srcObject = mediaStream;
+      localStream = mediaStream;
+      console.log(audioTrack)
+      console.log(localStream.getTracks())
+    });
+  };
 
   async function handlePeerClose() {
     try {
@@ -157,28 +172,25 @@ export default function Home() {
   }
 
   let toggleCamera = async () => {
-    let videoTrack = localStream.getTracks().find(track => track.kind === 'video')
-    if(!videoTrack){
-      return
+    if (!videoTrack) {
+      return;
+    } else if (videoTrack.enabled) {
+      videoTrack.enabled = false;
+    } else {
+      videoTrack.enabled = true;
     }
-    else if(videoTrack.enabled){
-        videoTrack.enabled = false
-    }else{
-        videoTrack.enabled = true
-    }
-}
+  };
 
-let toggleMic = async () => {
-  let audioTrack = localStream.getTracks().find(track => track.kind === 'audio')
-  if(!audioTrack){
-    return
-  }
-  else if(audioTrack.enabled){
-      audioTrack.enabled = false
-  }else{
-      audioTrack.enabled = true
-  }
-}
+  let toggleMic = async () => {
+    if (!audioTrack) {
+      console.log("returned")
+      return;
+    } else if (audioTrack.enabled) {
+      audioTrack.enabled = false;
+    } else {
+      audioTrack.enabled = true;
+    }
+  };
 
   // component functions and variables
 
@@ -273,7 +285,7 @@ let toggleMic = async () => {
               }}
               nextUserHandler={() => nextUserHandler()}
               toggleCamera={() => toggleCamera()}
-              toggleMic={()=>toggleMic()}
+              toggleMic={() => toggleMic()}
             />
           </div>
         </div>
