@@ -6,7 +6,12 @@ import ControlsScreen from "./components/screens/controlsScreen";
 import ChatScreen from "./components/screens/chatScreen";
 import { useEffect, useRef, useState } from "react";
 import Peer from "peerjs";
-let peer, currentUserId, currentRemoteUserId, randomRemoteUserId;
+let peer,
+  currentUserId,
+  currentRemoteUserId,
+  randomRemoteUserId,
+  mediaConnection,
+  localStream;
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
@@ -17,6 +22,15 @@ export default function Home() {
   const currentUserVideoRef = useRef(null);
 
   useEffect(() => {
+    var getUserMedia =
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia;
+    getUserMedia({ video: true, audio: true }, (mediaStream) => {
+      localStream = mediaStream;
+      currentUserVideoRef.current.srcObject = localStream;
+    });
+
     peer = new Peer({
       config: {
         iceServers: [
@@ -53,17 +67,12 @@ export default function Home() {
     });
 
     peer.on("call", (call) => {
-      var getUserMedia =
-        navigator.getUserMedia ||
-        navigator.webkitGetUserMedia ||
-        navigator.mozGetUserMedia;
-
-      getUserMedia({ video: true, audio: false }, (mediaStream) => {
-        currentUserVideoRef.current.srcObject = mediaStream;
-        call.answer(mediaStream);
-        call.on("stream", function (remoteStream) {
-          remoteVideoRef.current.srcObject = remoteStream;
-        });
+      call.answer(localStream);
+      call.on("stream", function (remoteStream) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      });
+      call.on("close", function () {
+        console.log("media stream trigger");
       });
     });
 
@@ -114,17 +123,9 @@ export default function Home() {
 
   const callRemoteUser = (remotePeerId) => {
     currentRemoteUserId = remotePeerId;
-    var getUserMedia =
-      navigator.getUserMedia ||
-      navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia;
-
-    getUserMedia({ video: true, audio: false }, (mediaStream) => {
-      currentUserVideoRef.current.srcObject = mediaStream;
-      const call = peer.call(remotePeerId, mediaStream);
-      call.on("stream", (remoteStream) => {
-        remoteVideoRef.current.srcObject = remoteStream;
-      });
+    mediaConnection = peer.call(remotePeerId, localStream);
+    mediaConnection.on("stream", (remoteStream) => {
+      remoteVideoRef.current.srcObject = remoteStream;
     });
   };
 
@@ -154,6 +155,26 @@ export default function Home() {
     }
     callRemoteUser(randomRemoteUserId);
   }
+
+  let toggleCamera = async () => {
+    let videoTrack = localStream.getTracks().find(track => track.kind === 'video')
+
+    if(videoTrack.enabled){
+        videoTrack.enabled = false
+    }else{
+        videoTrack.enabled = true
+    }
+}
+
+let toggleMic = async () => {
+  let audioTrack = localStream.getTracks().find(track => track.kind === 'audio')
+  console.log(localStream.getTracks())
+  // if(audioTrack.enabled){
+  //     audioTrack.enabled = false
+  // }else{
+  //     audioTrack.enabled = true
+  // }
+}
 
   // component functions and variables
 
@@ -247,6 +268,8 @@ export default function Home() {
                 initialLayoutHandler();
               }}
               nextUserHandler={() => nextUserHandler()}
+              toggleCamera={() => toggleCamera()}
+              toggleMic={()=>toggleMic()}
             />
           </div>
         </div>

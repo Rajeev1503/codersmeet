@@ -9,6 +9,8 @@ import { CgScreen } from "react-icons/cg";
 import { BsLayoutSplit } from "react-icons/bs";
 
 export default function ControlsScreen(props) {
+
+  
   return (
     <div className="h-full w-full flex flex-row flex-wrap gap-3 justify-center items-center p-2">
       <div className="cursor-pointer rounded-full p-1 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black font-semibold"
@@ -25,13 +27,13 @@ export default function ControlsScreen(props) {
           <BsLayoutSplit />
         </span>
       </div>   
-      <div className="cursor-pointer rounded-full p-1 flex flex-row gap-1 items-center justify-center px-3 pr-5 text-sm bg-white text-black font-semibold">
+      <div className="cursor-pointer rounded-full p-1 flex flex-row gap-1 items-center justify-center px-3 pr-5 text-sm bg-white text-black font-semibold" onClick={()=>props.toggleMic()} >
         <span className="text-2xl">
           <BiMicrophoneOff />
         </span>
         Mic
       </div>   
-      <div className="cursor-pointer rounded-full p-1 flex flex-row gap-1 items-center justify-center px-3 pr-5 text-sm bg-white text-black font-semibold">
+      <div className="cursor-pointer rounded-full p-1 flex flex-row gap-1 items-center justify-center px-3 pr-5 text-sm bg-white text-black font-semibold" onClick={()=>props.toggleCamera()}>
         <span className="text-2xl">
           <BiCamera />
         </span>
@@ -55,11 +57,6 @@ export default function ControlsScreen(props) {
         <BiChat />
         </span>
         Chats
-      </div>
-      <div className="cursor-pointer rounded-full p-1 flex flex-row gap-1 items-center justify-center px-3 pr-5 text-sm bg-white text-black font-semibold" onClick={props.closeCurrentCall}>
-        <span className="text-2xl">
-        close call
-        </span>
       </div>
       
     </div>
