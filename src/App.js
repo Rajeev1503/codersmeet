@@ -158,8 +158,10 @@ export default function Home() {
 
   let toggleCamera = async () => {
     let videoTrack = localStream.getTracks().find(track => track.kind === 'video')
-
-    if(videoTrack.enabled){
+    if(!videoTrack){
+      return
+    }
+    else if(videoTrack.enabled){
         videoTrack.enabled = false
     }else{
         videoTrack.enabled = true
@@ -168,12 +170,14 @@ export default function Home() {
 
 let toggleMic = async () => {
   let audioTrack = localStream.getTracks().find(track => track.kind === 'audio')
-  console.log(localStream.getTracks())
-  // if(audioTrack.enabled){
-  //     audioTrack.enabled = false
-  // }else{
-  //     audioTrack.enabled = true
-  // }
+  if(!audioTrack){
+    return
+  }
+  else if(audioTrack.enabled){
+      audioTrack.enabled = false
+  }else{
+      audioTrack.enabled = true
+  }
 }
 
   // component functions and variables
