@@ -15,36 +15,36 @@ let peer,
   videoTrack,
   audioTrack;
 
-  const peerJsServerConfig = {
-    config: {
-      iceServers: [
-        { url: "stun:stun.l.google.com:19302" },
-        {
-          urls: "stun:a.relay.metered.ca:80",
-        },
-        {
-          urls: "turn:a.relay.metered.ca:80",
-          username: "80f2af5598002ac9a80cc167",
-          credential: "jo5Km/7SHDPnJ/0S",
-        },
-        {
-          urls: "turn:a.relay.metered.ca:80?transport=tcp",
-          username: "80f2af5598002ac9a80cc167",
-          credential: "jo5Km/7SHDPnJ/0S",
-        },
-        {
-          urls: "turn:a.relay.metered.ca:443",
-          username: "80f2af5598002ac9a80cc167",
-          credential: "jo5Km/7SHDPnJ/0S",
-        },
-        {
-          urls: "turn:a.relay.metered.ca:443?transport=tcp",
-          username: "80f2af5598002ac9a80cc167",
-          credential: "jo5Km/7SHDPnJ/0S",
-        },
-      ],
-    },
-  }
+const peerJsServerConfig = {
+  config: {
+    iceServers: [
+      { url: "stun:stun.l.google.com:19302" },
+      {
+        urls: "stun:a.relay.metered.ca:80",
+      },
+      {
+        urls: "turn:a.relay.metered.ca:80",
+        username: "80f2af5598002ac9a80cc167",
+        credential: "jo5Km/7SHDPnJ/0S",
+      },
+      {
+        urls: "turn:a.relay.metered.ca:80?transport=tcp",
+        username: "80f2af5598002ac9a80cc167",
+        credential: "jo5Km/7SHDPnJ/0S",
+      },
+      {
+        urls: "turn:a.relay.metered.ca:443",
+        username: "80f2af5598002ac9a80cc167",
+        credential: "jo5Km/7SHDPnJ/0S",
+      },
+      {
+        urls: "turn:a.relay.metered.ca:443?transport=tcp",
+        username: "80f2af5598002ac9a80cc167",
+        credential: "jo5Km/7SHDPnJ/0S",
+      },
+    ],
+  },
+};
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
@@ -53,6 +53,8 @@ const serverUrl =
 export default function Home() {
   const remoteVideoRef = useRef(null);
   const currentUserVideoRef = useRef(null);
+  const [videoState, setVideoState] = useState(true);
+  const [audioState, setAudioState] = useState(true);
 
   useEffect(() => {
     getuserMediaHandler();
@@ -97,8 +99,8 @@ export default function Home() {
         .find((track) => track.kind === "audio");
       currentUserVideoRef.current.srcObject = mediaStream;
       localStream = mediaStream;
-      console.log(audioTrack)
-      console.log(localStream.getTracks())
+      console.log(audioTrack);
+      console.log(localStream.getTracks());
     });
   };
 
@@ -176,19 +178,22 @@ export default function Home() {
       return;
     } else if (videoTrack.enabled) {
       videoTrack.enabled = false;
+      setVideoState(false);
     } else {
       videoTrack.enabled = true;
+      setVideoState(true);
     }
   };
 
   let toggleMic = async () => {
     if (!audioTrack) {
-      console.log("returned")
       return;
     } else if (audioTrack.enabled) {
       audioTrack.enabled = false;
+      setAudioState(false);
     } else {
       audioTrack.enabled = true;
+      setAudioState(true);
     }
   };
 
@@ -214,13 +219,13 @@ export default function Home() {
         <QuestionBar />
         {/* <div className="text-white">{currentUserId}</div> */}
       </div>
-      <div className="h-[94%] w-full flex flex-row  ">
-        <div className="w-[4%] h-full border-r border-[#222]">
+      <div className="h-[94%] w-full flex flex-row ">
+        <div className="hidden xl:block w-0 xl:w-[4%] h-full border-r border-[#222]">
           <LeftPanel />
         </div>
         <div
           className={`${
-            showChatBox ? "w-[70%]" : "w-[96%] "
+            showChatBox ? "w-[100%] xl:w-[70%]" : "w-[100%] xl:w-[96%] "
           } transition-all duration-500 h-full flex flex-col items-center gap-4 border-r border-[#222]`}
         >
           <div
@@ -228,17 +233,17 @@ export default function Home() {
               showChatBox
                 ? "w-full"
                 : friendMaxLayout || userMaxLayout
-                ? "w-[70%]"
-                : "w-[90%]"
-            } transition-all duration-500 h-[85%] relative p-4 flex flex-row items-center justify-center`}
+                ? "w-[90%] xl:w-[70%]"
+                : "w-[100%] xl:w-[90%]"
+            } transition-all duration-500 h-[90%] relative p-4 flex flex-col xl:flex-row items-center justify-center`}
           >
             <div
               className={`${
                 userMaxLayout
-                  ? "cursor-pointer absolute w-64 h-64 bottom-4 right-10 z-10"
+                  ? "cursor-pointer absolute w-20 xl:w-64 h-64 bottom-5 right-10 z-10"
                   : friendMaxLayout
                   ? "w-full h-full"
-                  : "w-1/2 h-full"
+                  : "w-full xl:w-1/2 h-full"
               } transition-all duration-500 flex flex-row items-center justify-center`}
               onClick={() => {
                 setInitialLayout(false);
@@ -258,8 +263,8 @@ export default function Home() {
               className={`${
                 !userMaxLayout
                   ? !friendMaxLayout
-                    ? "w-1/2 h-full "
-                    : "cursor-pointer absolute w-64 h-64 bottom-4 right-10 z-10"
+                    ? "w-full xl:w-1/2 h-full "
+                    : "cursor-pointer absolute w-20 xl:w-64 h-64 bottom-5 right-10 z-10"
                   : "w-full h-full"
               } transition-all duration-500 flex flex-row items-center justify-center`}
               onClick={() => {
@@ -274,16 +279,20 @@ export default function Home() {
                 friendMaxLayout={friendMaxLayout}
                 initialLayout={initialLayout}
                 localStream={currentUserVideoRef}
+                videoState={videoState}
+                audioState={audioState}
               />
             </div>
           </div>
-          <div className="h-[15%] w-full border-t border-[#222]">
+          <div className="h-[10%] w-full border-t border-[#222]">
             <ControlsScreen
               setShowChatBox={() => setShowChatBox(!showChatBox)}
               initialLayoutHandler={() => {
                 initialLayoutHandler();
               }}
               nextUserHandler={() => nextUserHandler()}
+              videoState={videoState}
+              audioState={audioState}
               toggleCamera={() => toggleCamera()}
               toggleMic={() => toggleMic()}
             />
@@ -291,8 +300,8 @@ export default function Home() {
         </div>
         <div
           className={`${
-            showChatBox ? "w-[26%]" : "w-0"
-          } overflow-hidden transition-all duration-500 h-full `}
+            showChatBox ? "hidden xl:block xl:w-[26%]" : "w-0"
+          } hidden xl:block overflow-hidden transition-all duration-500 h-full `}
         >
           <div className="w-full h-full py-8 px-4">
             <ChatScreen />
