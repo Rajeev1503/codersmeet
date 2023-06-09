@@ -23,7 +23,7 @@ export default function UserScreen(props) {
         } flex flex-row justify-center items-center gap-2 p-1`}
       >
         <div className="text-white">
-          <span className="text-white text-2xl">John Doe</span>
+          <span className="text-white text-sm font-semibold">{props.currentUserId}(user)</span>
         </div>
       </div>
     </div>

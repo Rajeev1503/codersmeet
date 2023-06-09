@@ -6,9 +6,8 @@ import ControlsScreen from "./components/screens/controlsScreen";
 import ChatScreen from "./components/screens/chatScreen";
 import { useEffect, useRef, useState } from "react";
 import Peer from "peerjs";
+import Logo from "./components/logo";
 let peer,
-  currentUserId,
-  currentRemoteUserId,
   randomRemoteUserId,
   mediaConnection,
   localStream,
@@ -47,7 +46,7 @@ const peerJsServerConfig = {
 };
 const serverUrl =
   process.env.NODE_ENV === "development"
-    ? "http://localhost:8080"
+    ? "https://codersmeetbackend.vercel.app"
     : "https://codersmeetbackend.vercel.app";
 
 export default function Home() {
@@ -55,18 +54,22 @@ export default function Home() {
   const currentUserVideoRef = useRef(null);
   const [videoState, setVideoState] = useState(true);
   const [audioState, setAudioState] = useState(true);
+  const [currentRemoteUserId, setCurrentRemoteUserId] = useState();
+  const [currentUserId, setCurrentUserId] = useState()
 
   useEffect(() => {
     getuserMediaHandler();
     peer = new Peer(peerJsServerConfig);
     peer.on("open", (id) => {
-      currentUserId = id;
       pushIdToBackend(id);
     });
 
     peer.on("call", (call) => {
       call.answer(localStream);
       call.on("stream", function (remoteStream) {
+        if (remoteStream) {
+          setCurrentRemoteUserId(call.peer);
+        }
         remoteVideoRef.current.srcObject = remoteStream;
       });
       call.on("close", function () {
@@ -132,6 +135,7 @@ export default function Home() {
         body: JSON.stringify({ id }),
       });
       const result = await response.json();
+      setCurrentUserId(id);
       console.log(result);
     } catch (err) {
       console.log(err);
@@ -139,9 +143,11 @@ export default function Home() {
   }
 
   const callRemoteUser = (remotePeerId) => {
-    currentRemoteUserId = remotePeerId;
     mediaConnection = peer.call(remotePeerId, localStream);
     mediaConnection.on("stream", (remoteStream) => {
+      if (remoteStream) {
+        setCurrentRemoteUserId(remotePeerId);
+      }
       remoteVideoRef.current.srcObject = remoteStream;
     });
   };
@@ -206,8 +212,12 @@ export default function Home() {
   return (
     <main className="bg-[#000] h-[100vh] w-full">
       <div className="h-[6%] flex flex-row justify-between items-center border-b border-[#222] w-full">
-        <QuestionBar />
-        {/* <div className="text-white">{currentUserId}</div> */}
+        <div className="w-[4%]">
+          <Logo />
+        </div>
+        <div className="w-[96%]">
+          <QuestionBar />
+        </div>
       </div>
       <div className="h-[94%] w-full flex flex-row ">
         <div className="hidden xl:block w-0 xl:w-[4%] h-full border-r border-[#222]">
@@ -247,6 +257,7 @@ export default function Home() {
                 showChatBox={showChatBox}
                 initialLayout={initialLayout}
                 remoteStream={remoteVideoRef}
+                currentRemoteUserId={currentRemoteUserId}
               />
             </div>
             <div
@@ -271,6 +282,7 @@ export default function Home() {
                 localStream={currentUserVideoRef}
                 videoState={videoState}
                 audioState={audioState}
+                currentUserId={currentUserId}
               />
             </div>
           </div>
