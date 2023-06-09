@@ -159,17 +159,7 @@ export default function Home() {
     });
 
     const arrLength = allIdsFiltered.length;
-    const randomRemoteUserIdGenerator = () => {
-      return (randomRemoteUserId =
-        allIdsFiltered[Math.floor(Math.random() * arrLength)]);
-    };
-    if (!currentRemoteUserId) {
-      randomRemoteUserIdGenerator();
-    } else {
-      do {
-        randomRemoteUserIdGenerator();
-      } while (randomRemoteUserId == currentRemoteUserId);
-    }
+    randomRemoteUserId = allIdsFiltered[Math.floor(Math.random() * arrLength)];
     callRemoteUser(randomRemoteUserId);
   }
 
