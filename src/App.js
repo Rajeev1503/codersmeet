@@ -35,7 +35,7 @@ export default function Home() {
     peer.on("open", (id) => {
       pushIdToBackend(id);
     });
-    
+
     peer.on("call", (call) => {
       call.answer(localStream);
       call.on("stream", function (remoteStream) {
@@ -48,22 +48,22 @@ export default function Home() {
         console.log("media stream trigger");
       });
     });
-    
+
     peer.on("disconnected", () => {
       handlePeerClose();
     });
-    
-    peer.on('connection', function(conn) { 
+
+    peer.on("connection", function (conn) {
       // pushNewMessages();
-      console.log("conn stabilished")
-      conn.on('open', function() {
+      console.log("conn stabilished");
+      conn.on("open", function () {
         // Receive messages
-        conn.on('data', function(data) {
-          console.log('Received', data);
+        conn.on("data", function (data) {
+          console.log("Received", data);
         });
-      })
+      });
     });
-    
+
     window.addEventListener("beforeunload", () => {
       peer.disconnect();
     });
@@ -145,14 +145,13 @@ export default function Home() {
     const allIdsFiltered = allIds.data.filter((e) => {
       return e !== currentUserId;
     });
-    const arrLength = allIdsFiltered.length;
-    console.log("arrlength: " + arrLength)
-     let newIndex = Math.floor(Math.random() * arrLength)
-    if(currentRemoteUserId && allIdsFiltered[newIndex] == currentRemoteUserId){
-      console.log("index:" + allIdsFiltered.indexOf(currentRemoteUserId))
+    let newIndex = Math.floor(Math.random() * allIdsFiltered.length);
+    if (
+      currentRemoteUserId &&
+      allIdsFiltered[newIndex] == currentRemoteUserId
+    ) {
       newIndex++;
     }
-    console.log("new index: " + newIndex)
     callRemoteUser(allIdsFiltered[newIndex]);
   }
 
@@ -181,9 +180,9 @@ export default function Home() {
   };
 
   const sendMessage = (message) => {
-          // Send messages
-          dataConnection.send(message);
-  }
+    // Send messages
+    dataConnection.send(message);
+  };
 
   // component functions and variables
 
@@ -298,7 +297,7 @@ export default function Home() {
           } hidden xl:block overflow-hidden transition-all duration-500 h-full `}
         >
           <div className="w-full h-full py-8 px-4">
-            <ChatScreen sendMessage={sendMessage}/>
+            <ChatScreen sendMessage={sendMessage} />
           </div>
         </div>
       </div>
