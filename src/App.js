@@ -8,7 +8,7 @@ import ChatScreen from "./components/screens/chatScreen";
 import peerJsServerConfig from "./assets/peerJsServers";
 import Peer from "peerjs";
 import Logo from "./components/logo";
-let peer, dataConnection, mediaConnection, localStream, videoTrack, audioTrack;
+let peer, currentUserId, dataConnection, mediaConnection, localStream, videoTrack, audioTrack;
 
 const serverUrl =
   process.env.NODE_ENV === "development"
@@ -21,13 +21,13 @@ export default function Home() {
   const [videoState, setVideoState] = useState(true);
   const [audioState, setAudioState] = useState(true);
   const [currentRemoteUserId, setCurrentRemoteUserId] = useState();
-  const [currentUserId, setCurrentUserId] = useState();
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     getuserMediaHandler();
     peer = new Peer(peerJsServerConfig);
     peer.on("open", (id) => {
+      currentUserId = id;
       pushIdToBackend(id);
     });
 
@@ -81,14 +81,13 @@ export default function Home() {
   async function handlePeerClose() {
     fetch(`${serverUrl}/deleteids`, {
       method: "POST",
-
       keepalive: true,
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ currentUserId }),
+      body: JSON.stringify({ currentUserId: currentUserId }),
     })
-      .then(() => {})
+      .then((res) => {return res.json})
       .catch((err) => {
         console.log(err);
       });
@@ -102,8 +101,8 @@ export default function Home() {
       },
       body: JSON.stringify({ id }),
     })
-      .then(() => {
-        setCurrentUserId(id);
+      .then((res) => {
+        return res.json()
       })
       .catch((err) => {
         console.log(err);

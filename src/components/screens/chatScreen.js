@@ -18,7 +18,7 @@ export default function ChatScreen(props) {
         </div>
       ) : (
         <div>
-          <div className="relative flex flex-col h-full w-full text-white py-8">
+          <div className="relative flex flex-col h-full w-full text-white py-8 overflow-y-scroll">
             {props.messages.map((message, i) => {
               const currentuser = message.userId == props.currentUserId;
               return (
