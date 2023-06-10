@@ -8,13 +8,7 @@ import ChatScreen from "./components/screens/chatScreen";
 import peerJsServerConfig from "./assets/peerJsServers";
 import Peer from "peerjs";
 import Logo from "./components/logo";
-let peer,
-  dataConnection,
-  randomRemoteUserId,
-  mediaConnection,
-  localStream,
-  videoTrack,
-  audioTrack;
+let peer, dataConnection, mediaConnection, localStream, videoTrack, audioTrack;
 
 const serverUrl =
   process.env.NODE_ENV === "development"
@@ -28,6 +22,7 @@ export default function Home() {
   const [audioState, setAudioState] = useState(true);
   const [currentRemoteUserId, setCurrentRemoteUserId] = useState();
   const [currentUserId, setCurrentUserId] = useState();
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     getuserMediaHandler();
@@ -38,14 +33,12 @@ export default function Home() {
 
     peer.on("call", (call) => {
       call.answer(localStream);
+      dataConnection = peer.connect(call.peer);
       call.on("stream", function (remoteStream) {
         if (remoteStream) {
           setCurrentRemoteUserId(call.peer);
         }
         remoteVideoRef.current.srcObject = remoteStream;
-      });
-      call.on("close", function () {
-        console.log("media stream trigger");
       });
     });
 
@@ -54,12 +47,9 @@ export default function Home() {
     });
 
     peer.on("connection", function (conn) {
-      // pushNewMessages();
-      console.log("conn stabilished");
       conn.on("open", function () {
-        // Receive messages
         conn.on("data", function (data) {
-          console.log("Received", data);
+          setMessages((prev) => [...prev, data]);
         });
       });
     });
@@ -89,38 +79,35 @@ export default function Home() {
   };
 
   async function handlePeerClose() {
-    try {
-      const response = await fetch(`${serverUrl}/deleteids`, {
-        method: "POST",
+    fetch(`${serverUrl}/deleteids`, {
+      method: "POST",
 
-        keepalive: true,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ currentUserId }),
+      keepalive: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ currentUserId }),
+    })
+      .then(() => {})
+      .catch((err) => {
+        console.log(err);
       });
-      const result = await response.json();
-      console.log(result);
-    } catch (err) {
-      console.log(err);
-    }
   }
 
   async function pushIdToBackend(id) {
-    try {
-      const response = await fetch(`${serverUrl}/saveids`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
+    fetch(`${serverUrl}/saveids`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    })
+      .then(() => {
+        setCurrentUserId(id);
+      })
+      .catch((err) => {
+        console.log(err);
       });
-      const result = await response.json();
-      setCurrentUserId(id);
-      console.log(result);
-    } catch (err) {
-      console.log(err);
-    }
   }
 
   const callRemoteUser = (remotePeerId) => {
@@ -135,24 +122,34 @@ export default function Home() {
   };
 
   async function nextUserHandler() {
-    const response = await fetch(`${serverUrl}/allids`, {
+    fetch(`${serverUrl}/allids`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-    });
-    const allIds = await response.json();
-    const allIdsFiltered = allIds.data.filter((e) => {
-      return e !== currentUserId;
-    });
-    let newIndex = Math.floor(Math.random() * allIdsFiltered.length);
-    if (
-      currentRemoteUserId &&
-      allIdsFiltered[newIndex] == currentRemoteUserId
-    ) {
-      newIndex++;
-    }
-    callRemoteUser(allIdsFiltered[newIndex]);
+    })
+      .then((res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        throw new Error("Something went wrong");
+      })
+      .then((allIds) => {
+        const allIdsFiltered = allIds.data.filter((e) => {
+          return e !== currentUserId;
+        });
+        let newIndex = Math.floor(Math.random() * allIdsFiltered.length);
+        if (
+          currentRemoteUserId &&
+          allIdsFiltered[newIndex] == currentRemoteUserId
+        ) {
+          newIndex++;
+        }
+        callRemoteUser(allIdsFiltered[newIndex]);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   let toggleCamera = async () => {
@@ -181,7 +178,18 @@ export default function Home() {
 
   const sendMessage = (message) => {
     // Send messages
-    dataConnection.send(message);
+    if(!currentRemoteUserId){
+      return;
+    }
+    else{
+
+      const messageData = {
+        userId: currentUserId,
+        message: message,
+      };
+      setMessages((prev) => [...prev, messageData]);
+      dataConnection.send(messageData);
+    }
   };
 
   // component functions and variables
@@ -297,7 +305,11 @@ export default function Home() {
           } hidden xl:block overflow-hidden transition-all duration-500 h-full `}
         >
           <div className="w-full h-full py-8 px-4">
-            <ChatScreen sendMessage={sendMessage} />
+            <ChatScreen
+              sendMessage={sendMessage}
+              messages={messages}
+              currentUserId={currentUserId}
+            />
           </div>
         </div>
       </div>
