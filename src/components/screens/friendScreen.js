@@ -21,7 +21,7 @@ export default function FriendScreen(props) {
           props.initialLayout ? "" : props.friendMaxLayout ? "" : "hidden"
         } flex flex-row justify-center items-center gap-2 p-1`}
       >
-        <div className="text-white">
+        <div className="text-white p-1">
           <span className="text-white text-sm font-semibold">
             {props.currentRemoteUserId}
           </span>
@@ -31,7 +31,7 @@ export default function FriendScreen(props) {
             <button className="bg-red-500 p-1 px-2 text-white rounded-lg text-xs font-semibold">
               Report
             </button>
-            <div className="rounded-full p-1 px-3 text-white flex flex-row gap-1 items-center bg-[#222]">
+            <div className="rounded-full p-1 px-3 text-white flex flex-row gap-1 justify-center items-center bg-[#222]">
               <BiUpvote />
               upvote
             </div>

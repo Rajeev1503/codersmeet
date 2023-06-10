@@ -22,7 +22,7 @@ export default function UserScreen(props) {
           props.initialLayout ? "" : props.userMaxLayout ? "" : "hidden"
         } flex flex-row justify-center items-center gap-2 p-1`}
       >
-        <div className="text-white">
+        <div className="text-white p-1">
           <span className="text-white text-sm font-semibold">{props.currentUserId}(user)</span>
         </div>
       </div>

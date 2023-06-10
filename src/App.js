@@ -1,49 +1,21 @@
+import { useEffect, useRef, useState } from "react";
 import QuestionBar from "./components/screens/questionBar";
 import LeftPanel from "./components/screens/left-panel";
 import FriendScreen from "./components/screens/friendScreen";
 import UserScreen from "./components/screens/userScreen";
 import ControlsScreen from "./components/screens/controlsScreen";
 import ChatScreen from "./components/screens/chatScreen";
-import { useEffect, useRef, useState } from "react";
+import peerJsServerConfig from "./assets/peerJsServers";
 import Peer from "peerjs";
 import Logo from "./components/logo";
 let peer,
+  dataConnection,
   randomRemoteUserId,
   mediaConnection,
   localStream,
   videoTrack,
   audioTrack;
 
-const peerJsServerConfig = {
-  config: {
-    iceServers: [
-      { url: "stun:stun.l.google.com:19302" },
-      {
-        urls: "stun:a.relay.metered.ca:80",
-      },
-      {
-        urls: "turn:a.relay.metered.ca:80",
-        username: "80f2af5598002ac9a80cc167",
-        credential: "jo5Km/7SHDPnJ/0S",
-      },
-      {
-        urls: "turn:a.relay.metered.ca:80?transport=tcp",
-        username: "80f2af5598002ac9a80cc167",
-        credential: "jo5Km/7SHDPnJ/0S",
-      },
-      {
-        urls: "turn:a.relay.metered.ca:443",
-        username: "80f2af5598002ac9a80cc167",
-        credential: "jo5Km/7SHDPnJ/0S",
-      },
-      {
-        urls: "turn:a.relay.metered.ca:443?transport=tcp",
-        username: "80f2af5598002ac9a80cc167",
-        credential: "jo5Km/7SHDPnJ/0S",
-      },
-    ],
-  },
-};
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "https://codersmeetbackend.vercel.app"
@@ -55,7 +27,7 @@ export default function Home() {
   const [videoState, setVideoState] = useState(true);
   const [audioState, setAudioState] = useState(true);
   const [currentRemoteUserId, setCurrentRemoteUserId] = useState();
-  const [currentUserId, setCurrentUserId] = useState()
+  const [currentUserId, setCurrentUserId] = useState();
 
   useEffect(() => {
     getuserMediaHandler();
@@ -63,7 +35,7 @@ export default function Home() {
     peer.on("open", (id) => {
       pushIdToBackend(id);
     });
-
+    
     peer.on("call", (call) => {
       call.answer(localStream);
       call.on("stream", function (remoteStream) {
@@ -76,11 +48,22 @@ export default function Home() {
         console.log("media stream trigger");
       });
     });
-
+    
     peer.on("disconnected", () => {
       handlePeerClose();
     });
-
+    
+    peer.on('connection', function(conn) { 
+      // pushNewMessages();
+      console.log("conn stabilished")
+      conn.on('open', function() {
+        // Receive messages
+        conn.on('data', function(data) {
+          console.log('Received', data);
+        });
+      })
+    });
+    
     window.addEventListener("beforeunload", () => {
       peer.disconnect();
     });
@@ -102,8 +85,6 @@ export default function Home() {
         .find((track) => track.kind === "audio");
       currentUserVideoRef.current.srcObject = mediaStream;
       localStream = mediaStream;
-      console.log(audioTrack);
-      console.log(localStream.getTracks());
     });
   };
 
@@ -144,6 +125,7 @@ export default function Home() {
 
   const callRemoteUser = (remotePeerId) => {
     mediaConnection = peer.call(remotePeerId, localStream);
+    dataConnection = peer.connect(remotePeerId);
     mediaConnection.on("stream", (remoteStream) => {
       if (remoteStream) {
         setCurrentRemoteUserId(remotePeerId);
@@ -163,10 +145,15 @@ export default function Home() {
     const allIdsFiltered = allIds.data.filter((e) => {
       return e !== currentUserId;
     });
-
     const arrLength = allIdsFiltered.length;
-    randomRemoteUserId = allIdsFiltered[Math.floor(Math.random() * arrLength)];
-    callRemoteUser(randomRemoteUserId);
+    console.log("arrlength: " + arrLength)
+     let newIndex = Math.floor(Math.random() * arrLength)
+    if(currentRemoteUserId && allIdsFiltered[newIndex] == currentRemoteUserId){
+      console.log("index:" + allIdsFiltered.indexOf(currentRemoteUserId))
+      newIndex++;
+    }
+    console.log("new index: " + newIndex)
+    callRemoteUser(allIdsFiltered[newIndex]);
   }
 
   let toggleCamera = async () => {
@@ -192,6 +179,11 @@ export default function Home() {
       setAudioState(true);
     }
   };
+
+  const sendMessage = (message) => {
+          // Send messages
+          dataConnection.send(message);
+  }
 
   // component functions and variables
 
@@ -306,7 +298,7 @@ export default function Home() {
           } hidden xl:block overflow-hidden transition-all duration-500 h-full `}
         >
           <div className="w-full h-full py-8 px-4">
-            <ChatScreen />
+            <ChatScreen sendMessage={sendMessage}/>
           </div>
         </div>
       </div>
