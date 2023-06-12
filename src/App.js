@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import QuestionBar from "./components/screens/questionBar";
 import LeftPanel from "./components/screens/left-panel";
 import FriendScreen from "./components/screens/friendScreen";
@@ -8,6 +8,8 @@ import ChatScreen from "./components/screens/chatScreen";
 import peerJsServerConfig from "./assets/peerJsServers";
 import Peer from "peerjs";
 import Logo from "./components/logo";
+import { useNavigate } from "react-router-dom";
+import { userContext } from "./context/auth-context";
 let peer,
   currentUserId,
   dataConnection,
@@ -24,6 +26,10 @@ const serverUrl =
     : "https://codersmeetbackend.vercel.app";
 
 export default function Home() {
+
+  const { isLoggedIn} =
+    useContext(userContext);
+  const navigate = useNavigate();
   
   const remoteVideoRef = useRef(null);
   const currentUserVideoRef = useRef(null);
@@ -36,6 +42,9 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
+    if (!isLoggedIn) {
+      return navigate("/auth");
+    }
     getuserMediaHandler();
     peer = new Peer(peerJsServerConfig);
 

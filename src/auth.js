@@ -1,15 +1,27 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import skillsListJson from "./assets/skillsList.json";
 import fieldsListJson from "./assets/fieldsList.json";
 import InputBox from "./components/formComponents/inputBox";
 import CustomRadioBox from "./components/formComponents/customRadioBox";
 import SelectBox from "./components/formComponents/selectBox";
 import Logo from "./components/logo";
+import { userContext } from "./context/auth-context";
+import { useNavigate } from "react-router-dom";
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
     : "https://codersmeetbackend.vercel.app";
-export default function SignUp() {
+
+export default function Auth() {
+  const { isLoggedIn, setIsLoggedIn } =
+    useContext(userContext);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/");
+    }
+  }, []);
+
   const [selectedField, setSelectedField] = useState("Web Developer");
   const [radioBoxValues, setRadioBoxValues] = useState([]);
 
@@ -36,14 +48,13 @@ export default function SignUp() {
       body: JSON.stringify(formData),
     })
       .then((res) => {
-        if(res.ok){
+        if (res.ok) {
           return res.json();
         }
-        throw new Error("Something wrong")
+        throw new Error("Something wrong");
       })
       .then((resjson) => {
-        console.log(resjson.success);
-        return 
+        return setIsLoggedIn(true);
       })
       .catch((err) => {
         console.log(err);
@@ -66,14 +77,14 @@ export default function SignUp() {
       body: JSON.stringify(formData),
     })
       .then((res) => {
-        if(res.ok){
+        if (res.ok) {
           return res.json();
         }
-        throw new Error("Something wrong")
+        throw new Error("Something wrong");
       })
       .then((resjson) => {
         console.log(resjson);
-        return 
+        return;
       })
       .catch((err) => {
         console.log(err);
