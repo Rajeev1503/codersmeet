@@ -84,8 +84,8 @@ export default function Auth() {
         throw new Error("Something wrong");
       })
       .then((resjson) => {
-        console.log(resjson);
-        return;
+        setIsLoggedIn(true);
+        return navigate('/')
       })
       .catch((err) => {
         console.log(err);
