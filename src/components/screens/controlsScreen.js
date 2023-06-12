@@ -8,6 +8,7 @@ import {
 import { CgScreen } from "react-icons/cg";
 import { BsLayoutSplit } from "react-icons/bs";
 import { RxTrackNext } from "react-icons/rx";
+import {LuScreenShare, LuScreenShareOff} from 'react-icons/lu'
 
 export default function ControlsScreen(props) {
   return (
@@ -38,15 +39,18 @@ export default function ControlsScreen(props) {
       </div>
       <div
         className="cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
-        onClick={() => props.getDisplayMediaHandler()}
+        onClick={() => props.shareScreen()}
       >
         <span className="text-2xl">
-          <CgScreen />
+          {props.screenShareState ? <LuScreenShareOff /> : <LuScreenShare/>}
         </span>
       </div>
       <button
         className="cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
-        onClick={props.nextUserHandler}
+        onClick={() => {
+          props.setRemoteUserConnected(false);
+          props.nextUserHandler();
+        }}
         disabled={props.userChanged}
       >
         <span className="text-2xl">

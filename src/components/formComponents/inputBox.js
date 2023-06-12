@@ -1,4 +1,3 @@
-"use client";
 
 export default function InputBox(props) {
   return (
@@ -14,7 +13,8 @@ export default function InputBox(props) {
 
       <input
         id={props.id}
-        className="w-full bg-[#111] rounded-lg p-2 text-black px-3 outline-none font-semibold text-white"
+        name={props.name}
+        className="w-full bg-transparent rounded-lg p-2 border border-[#333] px-3 outline-none font-semibold text-white"
         placeholder={props.placeholder}
       />
     </div>

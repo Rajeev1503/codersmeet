@@ -1,29 +1,28 @@
-"use client";
 import { useReducer, useState } from "react";
 
 export default function CustomRadioBox(props) {
-  function skillsSelectReducer(state, action) {
-    switch (action.type) {
-      case "ADD_SKILL":
-        return [...state, action.skill];
-      case "REMOVE_SKILL":
-        const stateArr = state.filter((skills) => skills !== action.skill);
-        return state = stateArr;
-      default:
-        return state;
-    }
-  }
-  const [selectedSkillsState, selectedSkillsDispatch] = useReducer(
-    skillsSelectReducer,
-    []
-  );
+  // function skillsSelectReducer(state, action) {
+  //   switch (action.type) {
+  //     case "ADD_SKILL":
+  //       return [...state, action.skill];
+  //     case "REMOVE_SKILL": {
+  //       return state.filter((x) => x !== action.skill);
+  //     }
+  //     default:
+  //       return state;
+  //   }
+  // }
+  // const [selectedSkillsState, selectedSkillsDispatch] = useReducer(
+  //   skillsSelectReducer,
+  //   []
+  // );
   function skillsSelectHandler(skill) {
-    if (selectedSkillsState.includes(skill)) {
-      console.log("triggered");
-      selectedSkillsDispatch({ type: "REMOVE_SKILL", skill: skill });
-      console.log(selectedSkillsState);
+    if (props.radioBoxValues.includes(skill)) {
+      props.setRadioBoxValues((items) => items.filter((x) => x !== skill));
+    } else {
+      props.setRadioBoxValues((items) => [...items, skill]);
     }
-    selectedSkillsDispatch({ type: "ADD_SKILL", skill: skill });
+    return;
   }
   return (
     <div className="w-full flex flex-col lg:flex-row items-center lg:gap-4">
@@ -33,17 +32,17 @@ export default function CustomRadioBox(props) {
       >
         {props.label}
       </label>
-      <div className="w-full flex flex-row flex-wrap gap-1">
+      <div className="w-full flex flex-row flex-wrap gap-2">
         {props.skillsList.map((skill, i) => {
           return (
             <div
               key={i}
               id={props.id}
               className={`${
-                selectedSkillsState.includes(skill)
-                  ? "bg-[#333] text-white"
-                  : "bg-[#111] text-[#999]"
-              } text-sm capitalize max-w-max rounded-lg px-4 p-2 outline-none font-semibold text-gray-600 cursor-pointer`}
+                props.radioBoxValues.includes(skill)
+                  ? "bg-[#fff] text-black"
+                  : "bg-[#222] text-white"
+              } select-none text-sm capitalize max-w-max rounded-lg px-3 p-1 outline-none font-semibold cursor-pointer`}
               onClick={() => skillsSelectHandler(skill)}
             >
               {skill}

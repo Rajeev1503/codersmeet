@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import QuestionBar from "./components/screens/questionBar";
 import LeftPanel from "./components/screens/left-panel";
 import FriendScreen from "./components/screens/friendScreen";
@@ -8,59 +8,100 @@ import ChatScreen from "./components/screens/chatScreen";
 import peerJsServerConfig from "./assets/peerJsServers";
 import Peer from "peerjs";
 import Logo from "./components/logo";
-let peer,
-  currentUserId,
-  dataConnection,
-  mediaConnection,
-  localStream,
-  screenStream,
-  videoTrack,
-  screenSharing,
-  audioTrack;
+// let peer,
+//   currentUserId,
+//   dataConnection,
+//   mediaConnection,
+//   localStream,
+//   videoTrack,
+//   audioTrack;
 
 const serverUrl =
   process.env.NODE_ENV === "development"
-    ? "http://localhost:8080"
+    ? "https://codersmeetbackend.vercel.app"
     : "https://codersmeetbackend.vercel.app";
 
-export default function Home() {
-  
+export default function App() {
+
+  function functionsReducer (state, action) {
+    console.log("triggered")
+    switch (action.type) {
+      case'add_peer': {
+        console.log("here")
+        return {...state, peer: action.payload };
+      }
+      case 'ADD_DATA_CONNECTION': {
+        return {...state, mediaConnection: action.payload };
+      }
+      case 'ADD_MEDIA_STRESM': {
+        return { mediaStream: action.payload };
+      }
+      case 'ADD_LOCAL_STREAM': {
+        return { localStorage: action.payload };
+      }
+      case 'LOCAL_VIDEO_TRACK': {
+        return { localVideoTrack: action.payload };
+      }
+      case 'LOCAL_AUDIO_TRACK': {
+        return { localAudioTrack: action.payload };
+      }
+      case 'CURRENT_USER_ID': {
+        return { currentUserId: action.payload };
+      }
+      case 'CURRENT_REMOTE_USER_ID': {
+        return { currentRemoteUserId: action.payload };
+      }
+      default:
+        return state;
+    }
+  };
+
+  const initialStates = {
+    peer: null,
+    dataConnection: null,
+    mediaConnection: null,
+    localStream: null,
+    localVideoTrack: null,
+    localAudioTrack: null,
+    currentUserId: null,
+    currentRemoteUserId: null,
+  }
+
+  const [state, dispatch] = useReducer(functionsReducer, initialStates);
+
   const remoteVideoRef = useRef(null);
   const currentUserVideoRef = useRef(null);
-  const [remoteUserConnected, setRemoteUserConnected] = useState(false)
   const [videoState, setVideoState] = useState(true);
   const [audioState, setAudioState] = useState(true);
-  const [screenShareState, setScreenShareState] = useState(false)
-  const [currentUserIdState, setCurrentUserId] = useState()
-  const [currentRemoteUserId, setCurrentRemoteUserId] = useState();
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     getuserMediaHandler();
-    peer = new Peer(peerJsServerConfig);
-
-    peer.on("open", (id) => {
-      currentUserId = id;
-      setCurrentUserId(id);
+    let peerJs = new Peer(peerJsServerConfig);
+    console.log(peerJs)
+    dispatch({ type: 'add_peer', payload: peerJs });
+    console.log(state)
+    state.peer.on("open", (id) => {
       pushIdToBackend(id);
     });
 
-    peer.on("call", (call) => {
-      call.answer(localStream);
-      dataConnection = peer.connect(call.peer);
+    state.peer.on("call", (call) => {
+      call.answer(state.localStream);
+      const dataConnection = state.peer.connect(call.peer);
+      dispatch({ type: "ADD_DATA_CONNECTION", payload: dataConnection });
       call.on("stream", function (remoteStream) {
         if (remoteStream) {
-          setCurrentRemoteUserId(call.peer);
+          
         }
         remoteVideoRef.current.srcObject = remoteStream;
       });
     });
 
-    peer.on("disconnected", () => {
+    state.peer.on("disconnected", () => {
       handlePeerClose();
     });
 
-    peer.on("connection", function (conn) {
+    state.peer.on("connection", function (conn) {
       conn.on("open", function () {
         conn.on("data", function (data) {
           setMessages((prev) => [...prev, data]);
@@ -69,7 +110,7 @@ export default function Home() {
     });
 
     window.addEventListener("beforeunload", () => {
-      peer.disconnect();
+      state.peer.disconnect();
     });
   }, []);
 
@@ -82,14 +123,16 @@ export default function Home() {
         navigator.webkitGetUserMedia ||
         navigator.mozGetUserMedia;
       getUserMedia({ video: true, audio: true }, (mediaStream) => {
-        videoTrack = mediaStream
+        const videoTrack = mediaStream
           .getTracks()
           .find((track) => track.kind === "video");
-        audioTrack = mediaStream
+        dispatch({ type: "LOCAL_VIDEO_TRACK", payload: videoTrack });
+        const audioTrack = mediaStream
           .getTracks()
           .find((track) => track.kind === "audio");
+        dispatch({ type: "LOCAL_AUDIO_TRACK", payload: audioTrack });
         currentUserVideoRef.current.srcObject = mediaStream;
-        localStream = mediaStream;
+        dispatch({ type: "ADD_LOCAL_STREAM", payload: mediaStream });
       });
     } catch (err) {
       console.log(err);
@@ -103,7 +146,7 @@ export default function Home() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ currentUserId: currentUserId }),
+      body: JSON.stringify({ currentUserId: state.currentUserId }),
     })
       .then((res) => {
         return res.json;
@@ -124,57 +167,24 @@ export default function Home() {
       .then((res) => {
         return res.json();
       })
+      .then((response) => {
+        dispatch({ type: "CURRENT_USER_ID", payload: id });
+      })
       .catch((err) => {
         console.log(err);
       });
   }
 
-  const shareScreen = ()=> {
-    if(screenShareState){
-      return stopScreenSharing()
-    }
-    navigator.mediaDevices.getDisplayMedia({ video: true }).then((stream) => {
-      screenStream = stream;
-      let videoTrack = screenStream.getVideoTracks()[0];
-      videoTrack.onended = () => {
-          stopScreenSharing()
-      }
-      if (peer) {
-          let sender = mediaConnection.peerConnection.getSenders().find(function (s) {
-              return s.track.kind == videoTrack.kind;
-          })
-          sender.replaceTrack(videoTrack)
-          setScreenShareState(true)
-      }
-  }).catch((err)=>{
-  })
-  }
-  function stopScreenSharing() {
-    if (!screenShareState) return;
-    let videoTrack = localStream.getVideoTracks()[0];
-    if (peer) {
-        let sender = mediaConnection.peerConnection.getSenders().find(function (s) {
-            return s.track.kind == videoTrack.kind;
-        })
-        sender.replaceTrack(videoTrack)
-    }
-    screenStream.getTracks().forEach(function (track) {
-        track.stop();
-    });
-    setScreenShareState(false)
-}
-
   const callRemoteUser = (remotePeerId) => {
-    mediaConnection = peer.call(remotePeerId, localStream);
-    dataConnection = peer.connect(remotePeerId);
-    console.log(mediaConnection.open)
+    const mediaConnection = state.peer.call(remotePeerId, state.localStream);
+    dispatch({ type: "ADD_MEDIA_CONNECTION", payload: mediaConnection });
+    const dataConnection = state.peer.connect(remotePeerId);
+    dispatch({ type: "ADD_DATA_CONNECTION", payload: dataConnection });
     mediaConnection.on("stream", (remoteStream) => {
       if (remoteStream) {
-        setRemoteUserConnected(true)
-        setCurrentRemoteUserId(remotePeerId);
-        return remoteVideoRef.current.srcObject = remoteStream;
+        dispatch({ type: "CURRENT_REMOTE_USER_ID", payload: remotePeerId });
       }
-        nextUserHandler()
+      remoteVideoRef.current.srcObject = remoteStream;
     });
   };
 
@@ -193,12 +203,12 @@ export default function Home() {
       })
       .then((allIds) => {
         const allIdsFiltered = allIds.data.filter((e) => {
-          return e !== currentUserId;
+          return e !== state.currentUserId;
         });
         let newIndex = Math.floor(Math.random() * allIdsFiltered.length);
         if (
-          currentRemoteUserId &&
-          allIdsFiltered[newIndex] == currentRemoteUserId
+          state.currentRemoteUserId &&
+          allIdsFiltered[newIndex] == state.currentRemoteUserId
         ) {
           newIndex++;
         }
@@ -210,40 +220,40 @@ export default function Home() {
   }
 
   let toggleCamera = async () => {
-    if (!videoTrack) {
+    if (!state.videoTrack) {
       return;
-    } else if (videoTrack.enabled) {
-      videoTrack.enabled = false;
+    } else if (state.videoTrack.enabled) {
+      state.videoTrack.enabled = false;
       setVideoState(false);
     } else {
-      videoTrack.enabled = true;
+      state.videoTrack.enabled = true;
       setVideoState(true);
     }
   };
 
   let toggleMic = async () => {
-    if (!audioTrack) {
+    if (!state.audioTrack) {
       return;
-    } else if (audioTrack.enabled) {
-      audioTrack.enabled = false;
+    } else if (state.audioTrack.enabled) {
+      state.audioTrack.enabled = false;
       setAudioState(false);
     } else {
-      audioTrack.enabled = true;
+      state.audioTrack.enabled = true;
       setAudioState(true);
     }
   };
 
   const sendMessage = (message) => {
     // Send messages
-    if (!currentRemoteUserId) {
+    if (!state.currentRemoteUserId) {
       return;
     } else {
       const messageData = {
-        userId: currentUserId,
+        userId: state.currentUserId,
         message: message,
       };
       setMessages((prev) => [...prev, messageData]);
-      dataConnection.send(messageData);
+      state.dataConnection.send(messageData);
     }
   };
 
@@ -264,7 +274,7 @@ export default function Home() {
   }
 
   return (
-    <main className="bg-[#111] h-[100vh] w-full">
+    <main className="bg-[#000] h-[100vh] w-full">
       <div className="h-[6%] flex flex-row justify-between items-center border-b border-[#222] w-full">
         <div className="w-[4%]">
           <Logo />
@@ -311,7 +321,7 @@ export default function Home() {
                 showChatBox={showChatBox}
                 initialLayout={initialLayout}
                 remoteStream={remoteVideoRef}
-                currentRemoteUserId={currentRemoteUserId}
+                currentRemoteUserId={state.currentRemoteUserId}
               />
             </div>
             <div
@@ -336,7 +346,7 @@ export default function Home() {
                 localStream={currentUserVideoRef}
                 videoState={videoState}
                 audioState={audioState}
-                currentUserId={currentUserId}
+                currentUserId={state.currentUserId}
               />
             </div>
           </div>
@@ -351,9 +361,6 @@ export default function Home() {
               audioState={audioState}
               toggleCamera={() => toggleCamera()}
               toggleMic={() => toggleMic()}
-              setRemoteUserConnected={()=>setRemoteUserConnected}
-              shareScreen={shareScreen}
-              screenShareState={screenShareState}
             />
           </div>
         </div>
@@ -366,7 +373,7 @@ export default function Home() {
             <ChatScreen
               sendMessage={sendMessage}
               messages={messages}
-              currentUserId={currentUserIdState}
+              currentUserId={state.currentUserId}
             />
           </div>
         </div>
