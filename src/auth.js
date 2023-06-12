@@ -54,7 +54,8 @@ export default function Auth() {
         throw new Error("Something wrong");
       })
       .then((resjson) => {
-        return setIsLoggedIn(true);
+        setIsLoggedIn(true);
+        return navigate('/')
       })
       .catch((err) => {
         console.log(err);
