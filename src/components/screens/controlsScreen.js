@@ -48,7 +48,6 @@ export default function ControlsScreen(props) {
       <button
         className="cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
         onClick={() => {
-          props.setRemoteUserConnected(false);
           props.nextUserHandler();
         }}
         disabled={props.userChanged}

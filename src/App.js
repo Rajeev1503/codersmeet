@@ -9,41 +9,59 @@ import peerJsServerConfig from "./assets/peerJsServers";
 import Peer from "peerjs";
 import Logo from "./components/logo";
 import { useNavigate } from "react-router-dom";
-import { userContext } from "./context/auth-context";
+import { useCookies } from "react-cookie";
+import { userContext } from "./context/user-context";
 let peer,
   currentUserId,
+  currentRemoteUserId,
   dataConnection,
   mediaConnection,
   localStream,
   screenStream,
   videoTrack,
   screenSharing,
-  audioTrack;
+  audioTrack,
+  connectionState;
 
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
     : "https://codersmeetbackend.vercel.app";
 
-export default function Home() {
-
-  const { isLoggedIn} =
+export default function App() {
+  const { userData, setUserData, remoteUserData, setRemoteUserData } =
     useContext(userContext);
+
+  const [cookie, setCookie, removeCookie] = useCookies(["token"]);
+
   const navigate = useNavigate();
-  
+
   const remoteVideoRef = useRef(null);
   const currentUserVideoRef = useRef(null);
-  const [remoteUserConnected, setRemoteUserConnected] = useState(false)
   const [videoState, setVideoState] = useState(true);
   const [audioState, setAudioState] = useState(true);
-  const [screenShareState, setScreenShareState] = useState(false)
-  const [currentUserIdState, setCurrentUserId] = useState()
-  const [currentRemoteUserId, setCurrentRemoteUserId] = useState();
+  const [screenShareState, setScreenShareState] = useState(false);
+  const [currentUserIdState, setCurrentUserId] = useState("");
+  // const [currentRemoteUserId, setCurrentRemoteUserId] = useState("");
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!cookie.token) {
+      if (localStream) {
+        localStream.getTracks().forEach(function (track) {
+          track.stop();
+          currentUserVideoRef.current.srcObject = null;
+        });
+      }
       return navigate("/auth");
+    } else {
+      return;
+    }
+  }, [cookie.token]);
+
+  useEffect(() => {
+    if (!cookie.token) {
+      return;
     }
     getuserMediaHandler();
     peer = new Peer(peerJsServerConfig);
@@ -55,14 +73,23 @@ export default function Home() {
     });
 
     peer.on("call", (call) => {
-      call.answer(localStream);
-      dataConnection = peer.connect(call.peer);
-      call.on("stream", function (remoteStream) {
-        if (remoteStream) {
-          setCurrentRemoteUserId(call.peer);
+      if (connectionState) {
+        return;
+      } else {
+        call.answer(localStream);
+        if (call.open) {
+          connectionState = true;
         }
-        remoteVideoRef.current.srcObject = remoteStream;
-      });
+        dataConnection = peer.connect(call.peer);
+        call.on("stream", function (remoteStream) {
+          currentRemoteUserId = call.peer;
+          getRemoteUserData(currentRemoteUserId);
+          remoteVideoRef.current.srcObject = remoteStream;
+        });
+        call.on("error", function (err) {
+          console.log(err);
+        });
+      }
     });
 
     peer.on("disconnected", () => {
@@ -75,6 +102,10 @@ export default function Home() {
           setMessages((prev) => [...prev, data]);
         });
       });
+      conn.on("close", function () {
+        currentRemoteUserId = "";
+        nextUserHandler();
+      });
     });
 
     window.addEventListener("beforeunload", () => {
@@ -85,12 +116,9 @@ export default function Home() {
   // peerjs connection functions
 
   const getuserMediaHandler = () => {
-    try {
-      var getUserMedia =
-        navigator.getUserMedia ||
-        navigator.webkitGetUserMedia ||
-        navigator.mozGetUserMedia;
-      getUserMedia({ video: true, audio: true }, (mediaStream) => {
+    navigator.mediaDevices
+      .getUserMedia({ video: true, audio: true })
+      .then((mediaStream) => {
         videoTrack = mediaStream
           .getTracks()
           .find((track) => track.kind === "video");
@@ -99,13 +127,13 @@ export default function Home() {
           .find((track) => track.kind === "audio");
         currentUserVideoRef.current.srcObject = mediaStream;
         localStream = mediaStream;
+      })
+      .catch((err) => {
+        console.log(err);
       });
-    } catch (err) {
-      console.log(err);
-    }
   };
 
-  async function handlePeerClose() {
+  function handlePeerClose() {
     fetch(`${serverUrl}/deleteids`, {
       method: "POST",
       keepalive: true,
@@ -122,72 +150,63 @@ export default function Home() {
       });
   }
 
-  async function pushIdToBackend(id) {
-    fetch(`${serverUrl}/saveids`, {
+  function pushIdToBackend(id) {
+    fetch(`${serverUrl}/user/saveid`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: cookie.token,
       },
       body: JSON.stringify({ id }),
     })
       .then((res) => {
         return res.json();
       })
+      .then((response) => {
+        setUserData(response.data.user);
+      })
       .catch((err) => {
         console.log(err);
       });
   }
 
-  const shareScreen = ()=> {
-    if(screenShareState){
-      return stopScreenSharing()
-    }
-    navigator.mediaDevices.getDisplayMedia({ video: true }).then((stream) => {
-      screenStream = stream;
-      let videoTrack = screenStream.getVideoTracks()[0];
-      videoTrack.onended = () => {
-          stopScreenSharing()
-      }
-      if (peer) {
-          let sender = mediaConnection.peerConnection.getSenders().find(function (s) {
-              return s.track.kind == videoTrack.kind;
-          })
-          sender.replaceTrack(videoTrack)
-          setScreenShareState(true)
-      }
-  }).catch((err)=>{
-  })
-  }
-  function stopScreenSharing() {
-    if (!screenShareState) return;
-    let videoTrack = localStream.getVideoTracks()[0];
-    if (peer) {
-        let sender = mediaConnection.peerConnection.getSenders().find(function (s) {
-            return s.track.kind == videoTrack.kind;
-        })
-        sender.replaceTrack(videoTrack)
-    }
-    screenStream.getTracks().forEach(function (track) {
-        track.stop();
-    });
-    setScreenShareState(false)
-}
-
-  const callRemoteUser = (remotePeerId) => {
+  const callRemoteUser = async (remotePeerId) => {
     mediaConnection = peer.call(remotePeerId, localStream);
     dataConnection = peer.connect(remotePeerId);
-    console.log(mediaConnection.open)
     mediaConnection.on("stream", (remoteStream) => {
-      if (remoteStream) {
-        setRemoteUserConnected(true)
-        setCurrentRemoteUserId(remotePeerId);
-        return remoteVideoRef.current.srcObject = remoteStream;
-      }
-        nextUserHandler()
+      currentRemoteUserId = remotePeerId;
+      connectionState = true;
+      getRemoteUserData(remotePeerId);
+      remoteVideoRef.current.srcObject = remoteStream;
     });
   };
 
-  async function nextUserHandler() {
+  function getRemoteUserData(peerId) {
+    fetch(`${serverUrl}/user/findbypeer`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ peerId }),
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((response) => {
+        console.log(response.data.user)
+        setRemoteUserData(response.data.user);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  function nextUserHandler() {
+    if (currentRemoteUserId) {
+      currentRemoteUserId = "";
+      mediaConnection.close();
+      dataConnection.close();
+    }
     fetch(`${serverUrl}/allids`, {
       method: "GET",
       headers: {
@@ -216,6 +235,47 @@ export default function Home() {
       .catch((err) => {
         console.log(err);
       });
+  }
+
+  const shareScreen = () => {
+    if (screenShareState) {
+      return stopScreenSharing();
+    }
+    navigator.mediaDevices
+      .getDisplayMedia({ video: true })
+      .then((stream) => {
+        screenStream = stream;
+        let videoTrack = screenStream.getVideoTracks()[0];
+        videoTrack.onended = () => {
+          stopScreenSharing();
+        };
+        if (peer) {
+          let sender = mediaConnection.peerConnection
+            .getSenders()
+            .find(function (s) {
+              return s.track.kind == videoTrack.kind;
+            });
+          sender.replaceTrack(videoTrack);
+          setScreenShareState(true);
+        }
+      })
+      .catch((err) => {});
+  };
+  function stopScreenSharing() {
+    if (!screenShareState) return;
+    let videoTrack = localStream.getVideoTracks()[0];
+    if (peer) {
+      let sender = mediaConnection.peerConnection
+        .getSenders()
+        .find(function (s) {
+          return s.track.kind == videoTrack.kind;
+        });
+      sender.replaceTrack(videoTrack);
+    }
+    screenStream.getTracks().forEach(function (track) {
+      track.stop();
+    });
+    setScreenShareState(false);
   }
 
   let toggleCamera = async () => {
@@ -284,7 +344,7 @@ export default function Home() {
       </div>
       <div className="h-[94%] w-full flex flex-row ">
         <div className="hidden xl:block w-0 xl:w-[4%] h-full border-r border-[#222]">
-          <LeftPanel />
+          <LeftPanel cookie={cookie} removeCookie={removeCookie} />
         </div>
         <div
           className={`${
@@ -360,7 +420,6 @@ export default function Home() {
               audioState={audioState}
               toggleCamera={() => toggleCamera()}
               toggleMic={() => toggleMic()}
-              setRemoteUserConnected={()=>setRemoteUserConnected}
               shareScreen={shareScreen}
               screenShareState={screenShareState}
             />

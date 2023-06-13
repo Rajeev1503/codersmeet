@@ -5,19 +5,22 @@ import InputBox from "./components/formComponents/inputBox";
 import CustomRadioBox from "./components/formComponents/customRadioBox";
 import SelectBox from "./components/formComponents/selectBox";
 import Logo from "./components/logo";
-import { userContext } from "./context/auth-context";
+import { userContext } from "./context/user-context";
 import { useNavigate } from "react-router-dom";
+import { useCookies } from "react-cookie";
 const serverUrl =
   process.env.NODE_ENV === "development"
     ? "http://localhost:8080"
     : "https://codersmeetbackend.vercel.app";
 
 export default function Auth() {
-  const { isLoggedIn, setIsLoggedIn } =
-    useContext(userContext);
+  // const { isLoggedIn, setIsLoggedIn ,setUserToken } =
+  //   useContext(userContext);
+    const [cookie, setCookie, removeCookie] = useCookies(['token']);
+
   const navigate = useNavigate();
   useEffect(() => {
-    if (isLoggedIn) {
+    if (cookie.token) {
       navigate("/");
     }
   }, []);
@@ -40,7 +43,7 @@ export default function Auth() {
       usernameoremail: e.target.usernameoremail.value,
       password: e.target.password.value,
     };
-    fetch(`${serverUrl}/user/login`, {
+    fetch(`${serverUrl}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -54,7 +57,8 @@ export default function Auth() {
         throw new Error("Something wrong");
       })
       .then((resjson) => {
-        setIsLoggedIn(true);
+        setCookie('token',resjson.data.token)
+        console.log(cookie)
         return navigate('/')
       })
       .catch((err) => {
@@ -70,7 +74,7 @@ export default function Auth() {
       profession: selectedField,
       skills: radioBoxValues,
     };
-    fetch(`${serverUrl}/user/signup`, {
+    fetch(`${serverUrl}/auth/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -84,7 +88,7 @@ export default function Auth() {
         throw new Error("Something wrong");
       })
       .then((resjson) => {
-        setIsLoggedIn(true);
+        setCookie('token', resjson.data.token)
         return navigate('/')
       })
       .catch((err) => {
