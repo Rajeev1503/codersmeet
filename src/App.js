@@ -11,6 +11,7 @@ import Logo from "./components/logo";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import { userContext } from "./context/user-context";
+import UserProfile from "./components/screens/userProfile";
 let peer,
   currentUserId,
   currentRemoteUserId,
@@ -83,7 +84,7 @@ export default function App() {
         dataConnection = peer.connect(call.peer);
         call.on("stream", function (remoteStream) {
           currentRemoteUserId = call.peer;
-          getRemoteUserData(currentRemoteUserId);
+          getRemoteUserData(call.peer);
           remoteVideoRef.current.srcObject = remoteStream;
         });
         call.on("error", function (err) {
@@ -193,7 +194,6 @@ export default function App() {
         return res.json();
       })
       .then((response) => {
-        console.log(response.data.user)
         setRemoteUserData(response.data.user);
       })
       .catch((err) => {
@@ -322,6 +322,8 @@ export default function App() {
   const [userMaxLayout, setUserMaxLayout] = useState(false);
   const [showChatBox, setShowChatBox] = useState(true);
   const [initialLayout, setInitialLayout] = useState(true);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileModalData, setProfileModalData] = useState("");
 
   function initialLayoutHandler() {
     if (userMaxLayout || friendMaxLayout) {
@@ -332,14 +334,20 @@ export default function App() {
     } else return;
   }
 
+  function showProfileModalHandler(profileType) {
+    setShowProfileModal(true);
+    if (profileType == "remoteUser") {
+      return setProfileModalData(<UserProfile userData={remoteUserData} />);
+    } else {
+      return setProfileModalData(<UserProfile userData={userData} />);
+    }
+  }
+
   return (
     <main className="bg-[#111] h-[100vh] w-full">
       <div className="h-[6%] flex flex-row justify-between items-center border-b border-[#222] w-full">
-        <div className="w-[4%]">
+        <div className="">
           <Logo />
-        </div>
-        <div className="w-[96%]">
-          <QuestionBar />
         </div>
       </div>
       <div className="h-[94%] w-full flex flex-row ">
@@ -357,9 +365,20 @@ export default function App() {
                 ? "w-full"
                 : friendMaxLayout || userMaxLayout
                 ? "w-[90%] xl:w-[70%]"
-                : "w-[100%] xl:w-[90%]"
-            } transition-all duration-500 h-[90%] relative p-4 flex flex-col xl:flex-row items-center justify-center`}
+                : "w-[100%] xl:w-[100%]"
+            } transition-all duration-500 h-[90%] relative p-4 flex flex-col xl:flex-row gap-1 items-center justify-center`}
           >
+            {showProfileModal && (
+              <div className="absolute z-50">
+                <div
+                  className="cursor-pointer absolute top-2 right-3 text-white"
+                  onClick={() => setShowProfileModal(false)}
+                >
+                  x
+                </div>
+                {profileModalData}
+              </div>
+            )}
             <div
               className={`${
                 userMaxLayout
@@ -368,19 +387,20 @@ export default function App() {
                   ? "w-full h-full"
                   : "w-full xl:w-1/2 h-full"
               } transition-all duration-500 flex flex-row items-center justify-center`}
-              onClick={() => {
-                setInitialLayout(false);
-                setFriendMaxLayout(true);
-                setUserMaxLayout(false);
-              }}
             >
               <FriendScreen
-                userMaxLayout={userMaxLayout}
-                friendMaxLayout={friendMaxLayout}
-                showChatBox={showChatBox}
-                initialLayout={initialLayout}
+                layoutValues={{
+                  initialLayout: initialLayout,
+                  showChatBox: showChatBox,
+                  friendMaxLayout: friendMaxLayout,
+                  userMaxLayout: userMaxLayout,
+                  setInitialLayout: setInitialLayout,
+                  setFriendMaxLayout: setFriendMaxLayout,
+                  setUserMaxLayout: setUserMaxLayout,
+                }}
                 remoteStream={remoteVideoRef}
                 currentRemoteUserId={currentRemoteUserId}
+                showProfileModalHandler={showProfileModalHandler}
               />
             </div>
             <div
@@ -391,21 +411,22 @@ export default function App() {
                     : "cursor-pointer absolute w-20 xl:w-64 h-64 bottom-5 right-10 z-10"
                   : "w-full h-full"
               } transition-all duration-500 flex flex-row items-center justify-center`}
-              onClick={() => {
-                setInitialLayout(false);
-                setFriendMaxLayout(false);
-                setUserMaxLayout(true);
-              }}
             >
               <UserScreen
-                userMaxLayout={userMaxLayout}
-                showChatBox={showChatBox}
-                friendMaxLayout={friendMaxLayout}
-                initialLayout={initialLayout}
+                layoutValues={{
+                  initialLayout: initialLayout,
+                  showChatBox: showChatBox,
+                  friendMaxLayout: friendMaxLayout,
+                  userMaxLayout: userMaxLayout,
+                  setInitialLayout: setInitialLayout,
+                  setFriendMaxLayout: setFriendMaxLayout,
+                  setUserMaxLayout: setUserMaxLayout,
+                }}
                 localStream={currentUserVideoRef}
                 videoState={videoState}
                 audioState={audioState}
                 currentUserId={currentUserId}
+                showProfileModalHandler={showProfileModalHandler}
               />
             </div>
           </div>
@@ -427,10 +448,14 @@ export default function App() {
         </div>
         <div
           className={`${
-            showChatBox ? "hidden xl:block xl:w-[26%]" : "w-0"
+            showChatBox ? "hidden xl:flex flex-col gap-2 xl:w-[26%]" : "w-0 "
           } hidden xl:block overflow-hidden transition-all duration-500 h-full `}
         >
-          <div className="w-full h-full py-8 px-4">
+          <div className="flex flex-col gap-4 min-h-max w-full p-2 border-b border-[#222]">
+            <div className="h-1/2"><QuestionBar placeholder="Enter your question and press enter"/></div>
+            <div className="h-1/2"><QuestionBar placeholder="Remote User's question"/></div>
+          </div>
+          <div className="w-full flex-grow py-8 px-4">
             <ChatScreen
               sendMessage={sendMessage}
               messages={messages}

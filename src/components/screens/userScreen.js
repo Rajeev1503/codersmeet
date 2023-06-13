@@ -4,15 +4,26 @@ import { useContext } from "react";
 import { BiCamera, BiCameraOff } from "react-icons/bi";
 import { userContext } from "../../context/user-context";
 
-export default function UserScreen(props) {
+export default function UserScreen({
+  layoutValues: {
+    initialLayout,
+    showChatBox,
+    friendMaxLayout,
+    userMaxLayout,
+    setInitialLayout,
+    setFriendMaxLayout,
+    setUserMaxLayout,
+  },
+  ...props
+}) {
   const { userData, setUserData } = useContext(userContext);
   return (
     <div className="relative h-full w-full flex flex-col items-center justify-center pt-2">
       <div className=" p-2 px-2 w-full">
-        <div className="w-full">
+        <div className="w-full" onClick={()=>{setUserMaxLayout(true); setFriendMaxLayout(false); setInitialLayout(false)}}>
           <video
             className={`${!props.videoState && "hidden"} ${
-              props.initialLayout
+              initialLayout
                 ? "aspect-[16/9]"
                 : "aspect-[9/16] xl:aspect-[16/9]"
             }  border border-white object-cover h-full w-full`}
@@ -30,13 +41,13 @@ export default function UserScreen(props) {
       </div>
       <div
         className={`${
-          props.initialLayout ? "" : props.userMaxLayout ? "" : "hidden"
+          initialLayout ? "" : userMaxLayout ? "" : "hidden"
         } flex flex-row justify-center items-center gap-2 p-1`}
       >
         <div className="text-white p-1">
           <div className="text-white text-sm font-semibold">
             {userData ? (
-              <div>
+              <div onClick={() => props.showProfileModalHandler("user")}>
                 <span>{userData.fullname} </span>
                 <span className=" lowercase">({userData.username})</span>
               </div>
