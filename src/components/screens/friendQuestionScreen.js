@@ -1,13 +1,36 @@
-export default function FriendQuestionScreen() {
-  
-    return (
-      <div className="flex text-white flex-col flex-wrap gap-3 justify-center items-center p-2">
-        {/* <Buttons>Next</Buttons> */}
-        <div className="flex flex-row flex-wrap gap-3 justify-center items-center p-2 font-semibold">
-          <span className="text-xl">Question: </span><span className="text-lg">What is closures?</span>
-          <button className="text-sm bg-[#222] text-white p-1 px-2 rounded-lg">Solve this question</button>
-        </div>
-      </div>
-    );
+import { useContext, useEffect } from "react";
+import { BiRightArrowAlt } from "react-icons/bi";
+import { userContext } from "../../context/user-context";
+import serverUrl from "../../assets/serverUrl";
+
+export default function FriendQuestionScreen(props) {
+  const { userData, remoteUserData } = useContext(userContext);
+
+  function auto_grow(e) {
+    if (e.target.style.height !== "120px") {
+      e.target.style.height = "5px";
+      e.target.style.height = e.target.scrollHeight + "px";
+    } else {
+      e.target.style.overflowY = "scroll";
+    }
   }
-  
+
+  return (
+    <div className="h-full w-full flex flex-row justify-start items-start">
+      <button className="h-min min-w-max text-sm font-semibold border-none bg-white outline-none px-3 p-1 rounded-2xl flex flex-row items-center justify-center">
+        Solve
+         {/* <BiRightArrowAlt /> */}
+      </button>
+      <form className="h-full w-[80%] flex flex-row justify-start items-center">
+        <textarea
+          name="questionInput"
+          autoComplete="off"
+          rows={3}
+          className="h-full w-full text-white font-semibold bg-transparent px-4 outline-none"
+          value={remoteUserData? remoteUserData?.currentQuestion : 'No Question'}
+          readOnly
+        />
+      </form>
+    </div>
+  );
+}

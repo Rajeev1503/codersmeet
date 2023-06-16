@@ -8,10 +8,7 @@ import Logo from "./components/logo";
 import { userContext } from "./context/user-context";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
-const serverUrl =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:8080"
-    : "https://codersmeetbackend.vercel.app";
+import serverUrl from "./assets/serverUrl";
 
 export default function Auth() {
   // const { isLoggedIn, setIsLoggedIn ,setUserToken } =

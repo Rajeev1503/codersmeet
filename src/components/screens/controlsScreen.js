@@ -9,15 +9,16 @@ import { CgScreen } from "react-icons/cg";
 import { BsLayoutSplit } from "react-icons/bs";
 import { RxTrackNext } from "react-icons/rx";
 import {LuScreenShare, LuScreenShareOff} from 'react-icons/lu'
+import {TbArrowsDiff} from 'react-icons/tb'
 
 export default function ControlsScreen(props) {
   return (
-    <div className="h-full w-full flex flex-row flex-wrap gap-3 justify-center items-center p-2">
+    <div className="relative h-full w-full flex flex-row flex-wrap gap-3 justify-center items-center p-2">
       <div
         className="cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
         onClick={props.initialLayoutHandler}
       >
-        <span className="text-2xl">
+        <span className="text-xl">
           <BsLayoutSplit />
         </span>
       </div>
@@ -25,7 +26,7 @@ export default function ControlsScreen(props) {
         className="cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
         onClick={() => props.toggleMic()}
       >
-        <span className="text-2xl">
+        <span className="text-xl">
           {props.audioState ? <BiMicrophone /> : <BiMicrophoneOff />}
         </span>
       </div>
@@ -33,7 +34,7 @@ export default function ControlsScreen(props) {
         className="cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
         onClick={() => props.toggleCamera()}
       >
-        <span className="text-2xl">
+        <span className="text-xl">
           {props.videoState ? <BiCamera /> : <BiCameraOff />}
         </span>
       </div>
@@ -41,7 +42,7 @@ export default function ControlsScreen(props) {
         className="cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
         onClick={() => props.shareScreen()}
       >
-        <span className="text-2xl">
+        <span className="text-xl">
           {props.screenShareState ? <LuScreenShareOff /> : <LuScreenShare/>}
         </span>
       </div>
@@ -52,16 +53,16 @@ export default function ControlsScreen(props) {
         }}
         disabled={props.userChanged}
       >
-        <span className="text-2xl">
+        <span className="text-xl">
           <RxTrackNext />
         </span>
       </button>
       <div
-        className="cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
+        className="absolute right-0 cursor-pointer p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-transparent text-white"
         onClick={props.setShowChatBox}
       >
         <span className="text-2xl">
-          <BiChat />
+          <TbArrowsDiff />
         </span>
       </div>
     </div>

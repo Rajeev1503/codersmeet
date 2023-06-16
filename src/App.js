@@ -1,17 +1,18 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import QuestionBar from "./components/screens/questionBar";
-import LeftPanel from "./components/screens/left-panel";
 import FriendScreen from "./components/screens/friendScreen";
 import UserScreen from "./components/screens/userScreen";
 import ControlsScreen from "./components/screens/controlsScreen";
 import ChatScreen from "./components/screens/chatScreen";
 import peerJsServerConfig from "./assets/peerJsServers";
 import Peer from "peerjs";
-import Logo from "./components/logo";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import { userContext } from "./context/user-context";
 import UserProfile from "./components/screens/userProfile";
+import TopPanel from "./components/screens/top-panel";
+import serverUrl from "./assets/serverUrl";
+import UserQuestionScreen from "./components/screens/userQuestionScreen";
+import FriendQuestionScreen from "./components/screens/friendQuestionScreen";
 let peer,
   currentUserId,
   currentRemoteUserId,
@@ -24,16 +25,11 @@ let peer,
   audioTrack,
   connectionState;
 
-const serverUrl =
-  process.env.NODE_ENV === "development"
-    ? "http://localhost:8080"
-    : "https://codersmeetbackend.vercel.app";
-
 export default function App() {
   const { userData, setUserData, remoteUserData, setRemoteUserData } =
     useContext(userContext);
 
-  const [cookie, setCookie, removeCookie] = useCookies(["token"]);
+  const [cookie, removeCookie] = useCookies(["token"]);
 
   const navigate = useNavigate();
 
@@ -43,7 +39,6 @@ export default function App() {
   const [audioState, setAudioState] = useState(true);
   const [screenShareState, setScreenShareState] = useState(false);
   const [currentUserIdState, setCurrentUserId] = useState("");
-  // const [currentRemoteUserId, setCurrentRemoteUserId] = useState("");
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
@@ -85,6 +80,7 @@ export default function App() {
         call.on("stream", function (remoteStream) {
           currentRemoteUserId = call.peer;
           getRemoteUserData(call.peer);
+          console.log(call.peer)
           remoteVideoRef.current.srcObject = remoteStream;
         });
         call.on("error", function (err) {
@@ -345,18 +341,13 @@ export default function App() {
 
   return (
     <main className="bg-[#111] h-[100vh] w-full">
-      <div className="h-[6%] flex flex-row justify-between items-center border-b border-[#222] w-full">
-        <div className="">
-          <Logo />
-        </div>
+      <div className="h-[6%] border-b border-[#222] w-full">
+          <TopPanel cookie={cookie} removeCookie={removeCookie} />
       </div>
       <div className="h-[94%] w-full flex flex-row ">
-        <div className="hidden xl:block w-0 xl:w-[4%] h-full border-r border-[#222]">
-          <LeftPanel cookie={cookie} removeCookie={removeCookie} />
-        </div>
         <div
           className={`${
-            showChatBox ? "w-[100%] xl:w-[70%]" : "w-[100%] xl:w-[96%] "
+            showChatBox ? "w-[100%] xl:w-[74%]" : "w-[100%] xl:w-[100%] "
           } transition-all duration-500 h-full flex flex-col items-center gap-4 border-r border-[#222]`}
         >
           <div
@@ -364,9 +355,9 @@ export default function App() {
               showChatBox
                 ? "w-full"
                 : friendMaxLayout || userMaxLayout
-                ? "w-[90%] xl:w-[70%]"
+                ? "w-[90%] xl:w-[74%]"
                 : "w-[100%] xl:w-[100%]"
-            } transition-all duration-500 h-[90%] relative p-4 flex flex-col xl:flex-row gap-1 items-center justify-center`}
+            } transition-all duration-500 h-[92%] relative p-4 flex flex-col md:flex-row gap-1 items-center justify-center`}
           >
             {showProfileModal && (
               <div className="absolute z-50">
@@ -430,7 +421,7 @@ export default function App() {
               />
             </div>
           </div>
-          <div className="h-[10%] w-full border-t border-[#222]">
+          <div className="h-[8%] w-full border-t border-[#222]">
             <ControlsScreen
               setShowChatBox={() => setShowChatBox(!showChatBox)}
               initialLayoutHandler={() => {
@@ -451,11 +442,11 @@ export default function App() {
             showChatBox ? "hidden xl:flex flex-col gap-2 xl:w-[26%]" : "w-0 "
           } hidden xl:block overflow-hidden transition-all duration-500 h-full `}
         >
-          <div className="flex flex-col gap-4 min-h-max w-full p-2 border-b border-[#222]">
-            <div className="h-1/2"><QuestionBar placeholder="Enter your question and press enter"/></div>
-            <div className="h-1/2"><QuestionBar placeholder="Remote User's question"/></div>
+          <div className="flex flex-col gap-1 flex-grow max-h-[25%] w-full border-b border-[#222]">
+            <div className="py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start border-b border-[#222]"><span className="text-xs text-[#aaa]">Remote user's question</span><FriendQuestionScreen placeholder="Remote User's question"/></div>
+          <div className="py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start"><span className="text-xs text-[#aaa]">Your question</span><UserQuestionScreen placeholder="Remote User's question"/></div>
           </div>
-          <div className="w-full flex-grow py-8 px-4">
+          <div className="max-h-[75%] w-full flex-grow p-4">
             <ChatScreen
               sendMessage={sendMessage}
               messages={messages}

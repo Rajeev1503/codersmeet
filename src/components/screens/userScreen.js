@@ -26,7 +26,7 @@ export default function UserScreen({
               initialLayout
                 ? "aspect-[16/9]"
                 : "aspect-[9/16] xl:aspect-[16/9]"
-            }  border border-white object-cover h-full w-full`}
+            }  border border-white object-cover h-[99%] w-[99%]`}
             ref={props.localStream}
             autoPlay
           ></video>
