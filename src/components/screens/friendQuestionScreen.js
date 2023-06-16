@@ -17,10 +17,13 @@ export default function FriendQuestionScreen(props) {
 
   return (
     <div className="h-full w-full flex flex-row justify-start items-start">
-      <button className="h-min min-w-max text-sm font-semibold border-none bg-white outline-none px-3 p-1 rounded-2xl flex flex-row items-center justify-center">
+      {props.isRecording? <button className="h-min min-w-max text-sm font-semibold border-none bg-white outline-none px-3 p-1 rounded-2xl flex flex-row items-center justify-center" onClick={props.screenRecorderStop()}>
+        stopRecording
+         {/* <BiRightArrowAlt /> */}
+      </button>:<button className="h-min min-w-max text-sm font-semibold border-none bg-white outline-none px-3 p-1 rounded-2xl flex flex-row items-center justify-center" onClick={props.screenRecorderStart()}>
         Solve
          {/* <BiRightArrowAlt /> */}
-      </button>
+      </button> }
       <form className="h-full w-[80%] flex flex-row justify-start items-center">
         <textarea
           name="questionInput"

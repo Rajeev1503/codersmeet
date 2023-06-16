@@ -23,13 +23,15 @@ let peer,
   videoTrack,
   screenSharing,
   audioTrack,
-  connectionState;
+  connectionState,
+  mediaRecorder,
+  recordedData = [];
 
 export default function App() {
   const { userData, setUserData, remoteUserData, setRemoteUserData } =
     useContext(userContext);
 
-  const [cookie, removeCookie] = useCookies(["token"]);
+  const [cookie,setCookie, removeCookie] = useCookies(["token"]);
 
   const navigate = useNavigate();
 
@@ -40,6 +42,7 @@ export default function App() {
   const [screenShareState, setScreenShareState] = useState(false);
   const [currentUserIdState, setCurrentUserId] = useState("");
   const [messages, setMessages] = useState([]);
+  const [isRecording, setIsRecording] = useState(false);
 
   useEffect(() => {
     if (!cookie.token) {
@@ -80,7 +83,6 @@ export default function App() {
         call.on("stream", function (remoteStream) {
           currentRemoteUserId = call.peer;
           getRemoteUserData(call.peer);
-          console.log(call.peer)
           remoteVideoRef.current.srcObject = remoteStream;
         });
         call.on("error", function (err) {
@@ -169,6 +171,7 @@ export default function App() {
 
   const callRemoteUser = async (remotePeerId) => {
     mediaConnection = peer.call(remotePeerId, localStream);
+    console.log(mediaConnection.peerConnection);
     dataConnection = peer.connect(remotePeerId);
     mediaConnection.on("stream", (remoteStream) => {
       currentRemoteUserId = remotePeerId;
@@ -237,6 +240,7 @@ export default function App() {
     if (screenShareState) {
       return stopScreenSharing();
     }
+
     navigator.mediaDevices
       .getDisplayMedia({ video: true })
       .then((stream) => {
@@ -252,10 +256,13 @@ export default function App() {
               return s.track.kind == videoTrack.kind;
             });
           sender.replaceTrack(videoTrack);
+          currentUserVideoRef.current.srcObject = videoTrack;
           setScreenShareState(true);
         }
       })
-      .catch((err) => {});
+      .catch((err) => {
+        console.log(err);
+      });
   };
   function stopScreenSharing() {
     if (!screenShareState) return;
@@ -271,7 +278,43 @@ export default function App() {
     screenStream.getTracks().forEach(function (track) {
       track.stop();
     });
+
+    currentUserVideoRef.current.srcObject = videoTrack;
     setScreenShareState(false);
+  }
+
+  function screenRecorderStart() {
+    const options = {
+      audioBitsPerSecond: 128000,
+      videoBitsPerSecond: 2500000,
+      mimeType: 'video/webm',
+    };
+    setIsRecording(true);
+    console.log("recording");
+    mediaRecorder = new MediaRecorder(localStream, options);
+    mediaRecorder.start();
+    console.log(mediaRecorder)
+    mediaRecorder.ondataavailable = (e) => {
+      console.log("data")
+      console.log(e)
+      recordedData.push(e.data);
+    };
+    mediaRecorder.onstop = () => {
+      console.log("stop")
+      setIsRecording(false);
+      const blob = new Blob(recordedData, {
+        type: "video/mp4",
+      });
+      recordedData = [];
+
+      const RecUrl = URL.createObjectURL(blob);
+      currentUserVideoRef.current.controls = true;
+      currentUserVideoRef.current.srcObject = RecUrl;
+    };
+  }
+
+  function screenRecorderStop() {
+    mediaRecorder.stop();
   }
 
   let toggleCamera = async () => {
@@ -342,7 +385,7 @@ export default function App() {
   return (
     <main className="bg-[#111] h-[100vh] w-full">
       <div className="h-[6%] border-b border-[#222] w-full">
-          <TopPanel cookie={cookie} removeCookie={removeCookie} />
+        <TopPanel cookie={cookie} removeCookie={removeCookie} />
       </div>
       <div className="h-[94%] w-full flex flex-row ">
         <div
@@ -443,8 +486,21 @@ export default function App() {
           } hidden xl:block overflow-hidden transition-all duration-500 h-full `}
         >
           <div className="flex flex-col gap-1 flex-grow max-h-[25%] w-full border-b border-[#222]">
-            <div className="py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start border-b border-[#222]"><span className="text-xs text-[#aaa]">Remote user's question</span><FriendQuestionScreen placeholder="Remote User's question"/></div>
-          <div className="py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start"><span className="text-xs text-[#aaa]">Your question</span><UserQuestionScreen placeholder="Remote User's question"/></div>
+            <div className="py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start border-b border-[#222]">
+              <span className="text-xs text-[#aaa]">
+                Remote user's question
+              </span>
+              <FriendQuestionScreen
+                placeholder="Remote User's question"
+                isRecording={isRecording}
+                screenRecorderStart={() => screenRecorderStart}
+                screenRecorderStop={() => screenRecorderStop}
+              />
+            </div>
+            <div className="py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start">
+              <span className="text-xs text-[#aaa]">Your question</span>
+              <UserQuestionScreen placeholder="Remote User's question" />
+            </div>
           </div>
           <div className="max-h-[75%] w-full flex-grow p-4">
             <ChatScreen
