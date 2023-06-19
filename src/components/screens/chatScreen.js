@@ -1,10 +1,9 @@
-import { useRef } from "react";
 import { FiSend } from "react-icons/fi";
 
 export default function ChatScreen(props) {
   const sendMessageHandler = (e) => {
     e.preventDefault();
-    props.sendMessage(e.target.messageInput.value);
+    props.sendMessage("message",e.target.messageInput.value);
     e.target.messageInput.value = ''
   };
 

@@ -4,7 +4,7 @@ import serverUrl from "../../assets/serverUrl";
 import { useCookies } from "react-cookie";
 
 export default function UserQuestionScreen(props) {
-  const { userData, setUserData } = useContext(userContext);
+  const { userData, setUserData, remoteUserData } = useContext(userContext);
   const [cookie] = useCookies(["token"]);
 
   function inputBoxSubmitHandler(e) {
@@ -46,6 +46,8 @@ export default function UserQuestionScreen(props) {
   }
 
   return (
+    <div className="h-full w-full relative">
+
     <form className="h-full w-full flex flex-row justify-start items-center">
       <textarea
         id="userQuestionInput"
@@ -59,7 +61,35 @@ export default function UserQuestionScreen(props) {
           handleKeyDown(e);
         }}
         defaultValue={userData? userData.currentQuestion?.length == 0 ?'': userData.currentQuestion : ''}
-      />
+        />
     </form>
+    {props.confirmationModal && (
+        <div className="z-50 absolute top-10 text-[#fff] bg-[#222] p-4 w-[90%] rounded-2xl font-semibold">
+          <div className="flex flex-col gap-6">
+            <div>
+              <h1 className="text-lg">Did you understand the {remoteUserData?.fullname}'s answer?</h1>
+            </div>
+            <div className="flex flex-row gap-2 justify-start">
+              <button
+                className="h-min min-w-max text-sm font-semibold border-none bg-white text-black outline-none px-3 p-1 rounded-2xl flex flex-row items-center justify-center"
+                onClick={() => {
+                  props.setConfirmationModal(false);
+                }}
+              >
+                no
+              </button>
+              <button
+                className="h-min min-w-max text-sm font-semibold border-none bg-white text-black outline-none px-3 p-1 rounded-2xl flex flex-row items-center justify-center"
+                onClick={() => {
+                  props.setConfirmationModal(false);
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+        </div>
   );
 }

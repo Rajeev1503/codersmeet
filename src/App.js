@@ -31,7 +31,7 @@ export default function App() {
   const { userData, setUserData, remoteUserData, setRemoteUserData } =
     useContext(userContext);
 
-  const [cookie,setCookie, removeCookie] = useCookies(["token"]);
+  const [cookie, setCookie, removeCookie] = useCookies(["token"]);
 
   const navigate = useNavigate();
 
@@ -43,6 +43,7 @@ export default function App() {
   const [currentUserIdState, setCurrentUserId] = useState("");
   const [messages, setMessages] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
+  const [confirmationModal, setConfirmationModal] = useState(false);
 
   useEffect(() => {
     if (!cookie.token) {
@@ -98,7 +99,13 @@ export default function App() {
     peer.on("connection", function (conn) {
       conn.on("open", function () {
         conn.on("data", function (data) {
-          setMessages((prev) => [...prev, data]);
+          if (data.type == "message") {
+            setMessages((prev) => [...prev, data]);
+          } else if (data.type == "approval") {
+            setConfirmationModal(true);
+          } else if (data.type == "approved") {
+            answerApprovedHandler();
+          }
         });
       });
       conn.on("close", function () {
@@ -171,7 +178,6 @@ export default function App() {
 
   const callRemoteUser = async (remotePeerId) => {
     mediaConnection = peer.call(remotePeerId, localStream);
-    console.log(mediaConnection.peerConnection);
     dataConnection = peer.connect(remotePeerId);
     mediaConnection.on("stream", (remoteStream) => {
       currentRemoteUserId = remotePeerId;
@@ -201,6 +207,7 @@ export default function App() {
   }
 
   function nextUserHandler() {
+    setRemoteUserData("");
     if (currentRemoteUserId) {
       currentRemoteUserId = "";
       mediaConnection.close();
@@ -229,6 +236,7 @@ export default function App() {
         ) {
           newIndex++;
         }
+        console.log(allIdsFiltered.length);
         callRemoteUser(allIdsFiltered[newIndex]);
       })
       .catch((err) => {
@@ -237,6 +245,9 @@ export default function App() {
   }
 
   const shareScreen = () => {
+    if (!currentRemoteUserId) {
+      return;
+    }
     if (screenShareState) {
       return stopScreenSharing();
     }
@@ -245,6 +256,7 @@ export default function App() {
       .getDisplayMedia({ video: true })
       .then((stream) => {
         screenStream = stream;
+        screenRecorderHandler(stream);
         let videoTrack = screenStream.getVideoTracks()[0];
         videoTrack.onended = () => {
           stopScreenSharing();
@@ -256,7 +268,6 @@ export default function App() {
               return s.track.kind == videoTrack.kind;
             });
           sender.replaceTrack(videoTrack);
-          currentUserVideoRef.current.srcObject = videoTrack;
           setScreenShareState(true);
         }
       })
@@ -278,43 +289,41 @@ export default function App() {
     screenStream.getTracks().forEach(function (track) {
       track.stop();
     });
-
-    currentUserVideoRef.current.srcObject = videoTrack;
     setScreenShareState(false);
   }
 
-  function screenRecorderStart() {
+  function screenRecorderHandler(stream) {
     const options = {
       audioBitsPerSecond: 128000,
       videoBitsPerSecond: 2500000,
-      mimeType: 'video/webm',
+      mimeType: "video/webm",
     };
     setIsRecording(true);
-    console.log("recording");
-    mediaRecorder = new MediaRecorder(localStream, options);
+    mediaRecorder = new MediaRecorder(stream, options);
     mediaRecorder.start();
-    console.log(mediaRecorder)
     mediaRecorder.ondataavailable = (e) => {
-      console.log("data")
-      console.log(e)
       recordedData.push(e.data);
     };
-    mediaRecorder.onstop = () => {
-      console.log("stop")
-      setIsRecording(false);
-      const blob = new Blob(recordedData, {
-        type: "video/mp4",
-      });
-      recordedData = [];
 
-      const RecUrl = URL.createObjectURL(blob);
-      currentUserVideoRef.current.controls = true;
-      currentUserVideoRef.current.srcObject = RecUrl;
+    mediaRecorder.onstop = () => {
+      setIsRecording(false);
     };
   }
 
   function screenRecorderStop() {
     mediaRecorder.stop();
+  }
+  function pauseScreenRecorder() {
+    mediaRecorder.pause();
+  }
+
+  function resumeScreenRecorder() {
+    mediaRecorder.resume();
+  }
+
+  function deleteScreenRecorder() {
+    mediaRecorder.stop();
+    recordedData = [];
   }
 
   let toggleCamera = async () => {
@@ -341,7 +350,7 @@ export default function App() {
     }
   };
 
-  const sendMessage = (message) => {
+  const sendMessage = (type, message) => {
     // Send messages
     if (!currentRemoteUserId) {
       return;
@@ -350,10 +359,37 @@ export default function App() {
         userId: currentUserId,
         message: message,
       };
-      setMessages((prev) => [...prev, messageData]);
-      dataConnection.send(messageData);
+      if (type == "message") {
+        setMessages((prev) => [...prev, messageData]);
+      }
+      dataConnection.send({ type, messageData });
     }
   };
+
+  function answerApprovedHandler() {
+    const blob = new Blob(recordedData, {
+      type: "video/mp4",
+    });
+    const newObjectUrl = URL.createObjectURL(blob);
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () =>{
+            console.log(reader.result);
+        }
+    console.log(newObjectUrl);
+    fetch("https://api.cloudinary.com/v1_1/codersmeet/video/upload", {
+      method: "POST",
+      body: { upload_preset: "codersmeetforum", file: newObjectUrl },
+    })
+    .then(res=>{return res.json()})
+      .then((response) => {
+        console.log(response);
+        // setCloudinaryImage(response.data.secure_url);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
 
   // component functions and variables
 
@@ -380,6 +416,11 @@ export default function App() {
     } else {
       return setProfileModalData(<UserProfile userData={userData} />);
     }
+  }
+
+  function confirmationHandler() {
+    setConfirmationModal(false);
+    dataConnection.send({ type: "approved", message: "approved your answer" });
   }
 
   return (
@@ -486,20 +527,28 @@ export default function App() {
           } hidden xl:block overflow-hidden transition-all duration-500 h-full `}
         >
           <div className="flex flex-col gap-1 flex-grow max-h-[25%] w-full border-b border-[#222]">
-            <div className="py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start border-b border-[#222]">
+            <div className="relative py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start border-b border-[#222]">
               <span className="text-xs text-[#aaa]">
                 Remote user's question
               </span>
               <FriendQuestionScreen
                 placeholder="Remote User's question"
+                sendMessage={sendMessage}
                 isRecording={isRecording}
-                screenRecorderStart={() => screenRecorderStart}
                 screenRecorderStop={() => screenRecorderStop}
+                shareScreen={shareScreen}
+                pauseScreenRecorder={() => pauseScreenRecorder}
+                resumeScreenRecorder={() => resumeScreenRecorder}
+                deleteScreenRecorder={() => deleteScreenRecorder}
               />
             </div>
             <div className="py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start">
               <span className="text-xs text-[#aaa]">Your question</span>
-              <UserQuestionScreen placeholder="Remote User's question" />
+              <UserQuestionScreen
+                placeholder="Remote User's question"
+                confirmationModal={confirmationModal}
+                setConfirmationModal={confirmationHandler}
+              />
             </div>
           </div>
           <div className="max-h-[75%] w-full flex-grow p-4">

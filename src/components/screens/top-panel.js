@@ -14,9 +14,9 @@ export default function TopPanel(props) {
           {/* <div className="cursor-pointer p-2 bg-white rounded-full">
             <BiMoon />
           </div> */}
-          <div className="cursor-pointer p-2 bg-white rounded-full">
+          <a href="https://codersmeetforum.vercel.app/" target="_blank" className="cursor-pointer p-2 bg-white rounded-full">
             <MdOutlineForum />
-          </div>
+          </a>
           <div className="cursor-pointer p-2 bg-white rounded-full">
             <FiSettings />
           </div>
