@@ -204,7 +204,7 @@ export default function App() {
         return res.json();
       })
       .then((response) => {
-        remoteUserDataGlobal = response.data.user
+        remoteUserDataGlobal = response.data.user;
         setRemoteUserData(response.data.user);
       })
       .catch((err) => {
@@ -372,13 +372,19 @@ export default function App() {
     }
   };
 
-  function answerHandler(type) {
+  function answerSubmissionMessage(message) {
+    setAnswerMessage((prev) => ({ ...prev, state: true, message: message }));
+    setTimeout(() => {
+      setAnswerMessage((prev) => ({ ...prev, state: false, message: "" }));
+    }, 3000);
+  }
+
+  function answerHandler(type, message) {
     if (type == "rejected") {
-      setRejectedMessage(true);
-      setTimeout(() => {
-        setRejectedMessage(false);
-      }, 3000);
+      answerSubmissionMessage(message);
     } else {
+      answerSubmissionMessage(message);
+
       const blob = new Blob(recordedData, {
         type: "video/mp4",
       });
@@ -388,7 +394,7 @@ export default function App() {
       formData.append("api_key", "386421548114291");
       formData.append("file", myFile);
       formData.append("upload_preset", "codersmeetforum");
-
+      upvoteUserHandler();
       axios
         .post(
           "https://api.cloudinary.com/v1_1/codersmeet/auto/upload",
@@ -415,6 +421,25 @@ export default function App() {
     }
   }
 
+  function upvoteUserHandler() {
+    fetch(`${serverUrl}/user/upvoteuser`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: cookie.token,
+      }
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((response) => {
+        setUserData(response.data.user);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
   // component functions and variables
 
   const [friendMaxLayout, setFriendMaxLayout] = useState(false);
@@ -423,7 +448,10 @@ export default function App() {
   const [initialLayout, setInitialLayout] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileModalData, setProfileModalData] = useState("");
-  const [rejectedMessage, setRejectedMessage] = useState(false);
+  const [answerMessage, setAnswerMessage] = useState({
+    state: false,
+    message: "",
+  });
 
   function initialLayoutHandler() {
     if (userMaxLayout || friendMaxLayout) {
@@ -454,12 +482,12 @@ export default function App() {
         <TopPanel cookie={cookie} removeCookie={removeCookie} />
       </div>
       <div className="relative h-[94%] w-full flex flex-row justify-center">
-        {rejectedMessage && (
+        {answerMessage.state && (
           <div className="z-50 absolute top-2 text-[#fff] bg-[#222] p-4 max-w-max rounded-2xl font-semibold">
             <div>
               <h1 className="text-lg">
-                <span className="capitalize">{remoteUserData?.fullname}</span>{" "}
-                didn't approve your answer
+                <span className="capitalize">{remoteUserData?.fullname}</span>
+                <span>{answerMessage.message}</span>
               </h1>
             </div>
           </div>
