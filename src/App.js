@@ -13,9 +13,11 @@ import TopPanel from "./components/screens/top-panel";
 import serverUrl from "./assets/serverUrl";
 import UserQuestionScreen from "./components/screens/userQuestionScreen";
 import FriendQuestionScreen from "./components/screens/friendQuestionScreen";
+import axios, { Axios } from "axios";
 let peer,
   currentUserId,
   currentRemoteUserId,
+  remoteUserDataGlobal,
   dataConnection,
   mediaConnection,
   localStream,
@@ -63,6 +65,7 @@ export default function App() {
     if (!cookie.token) {
       return;
     }
+
     getuserMediaHandler();
     peer = new Peer(peerJsServerConfig);
 
@@ -104,7 +107,9 @@ export default function App() {
           } else if (data.type == "approval") {
             setConfirmationModal(true);
           } else if (data.type == "approved") {
-            answerApprovedHandler();
+            answerHandler("approved");
+          } else if (data.type == "rejected") {
+            answerHandler("rejected");
           }
         });
       });
@@ -199,6 +204,7 @@ export default function App() {
         return res.json();
       })
       .then((response) => {
+        remoteUserDataGlobal = response.data.user
         setRemoteUserData(response.data.user);
       })
       .catch((err) => {
@@ -366,29 +372,47 @@ export default function App() {
     }
   };
 
-  function answerApprovedHandler() {
-    const blob = new Blob(recordedData, {
-      type: "video/mp4",
-    });
-    const newObjectUrl = URL.createObjectURL(blob);
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = () =>{
-            console.log(reader.result);
-        }
-    console.log(newObjectUrl);
-    fetch("https://api.cloudinary.com/v1_1/codersmeet/video/upload", {
-      method: "POST",
-      body: { upload_preset: "codersmeetforum", file: newObjectUrl },
-    })
-    .then(res=>{return res.json()})
-      .then((response) => {
-        console.log(response);
-        // setCloudinaryImage(response.data.secure_url);
-      })
-      .catch((error) => {
-        console.log(error);
+  function answerHandler(type) {
+    if (type == "rejected") {
+      setRejectedMessage(true);
+      setTimeout(() => {
+        setRejectedMessage(false);
+      }, 3000);
+    } else {
+      const blob = new Blob(recordedData, {
+        type: "video/mp4",
       });
+
+      const myFile = new File([blob], "demo.mp4", { type: "video/mp4" });
+      const formData = new FormData();
+      formData.append("api_key", "386421548114291");
+      formData.append("file", myFile);
+      formData.append("upload_preset", "codersmeetforum");
+
+      axios
+        .post(
+          "https://api.cloudinary.com/v1_1/codersmeet/auto/upload",
+          formData
+        )
+        .then((response) => {
+          fetch(`${serverUrl}/forum/uploadquestion`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              question: remoteUserDataGlobal.currentQuestion,
+              answer: response.data.url,
+              author: remoteUserDataGlobal.username,
+            }),
+          }).catch((err) => {
+            console.log(err);
+          });
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
   }
 
   // component functions and variables
@@ -399,6 +423,7 @@ export default function App() {
   const [initialLayout, setInitialLayout] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileModalData, setProfileModalData] = useState("");
+  const [rejectedMessage, setRejectedMessage] = useState(false);
 
   function initialLayoutHandler() {
     if (userMaxLayout || friendMaxLayout) {
@@ -418,9 +443,9 @@ export default function App() {
     }
   }
 
-  function confirmationHandler() {
+  function confirmationHandler(type) {
     setConfirmationModal(false);
-    dataConnection.send({ type: "approved", message: "approved your answer" });
+    dataConnection.send({ type: type, message: `${type} your answer` });
   }
 
   return (
@@ -428,7 +453,17 @@ export default function App() {
       <div className="h-[6%] border-b border-[#222] w-full">
         <TopPanel cookie={cookie} removeCookie={removeCookie} />
       </div>
-      <div className="h-[94%] w-full flex flex-row ">
+      <div className="relative h-[94%] w-full flex flex-row justify-center">
+        {rejectedMessage && (
+          <div className="z-50 absolute top-2 text-[#fff] bg-[#222] p-4 max-w-max rounded-2xl font-semibold">
+            <div>
+              <h1 className="text-lg">
+                <span className="capitalize">{remoteUserData?.fullname}</span>{" "}
+                didn't approve your answer
+              </h1>
+            </div>
+          </div>
+        )}
         <div
           className={`${
             showChatBox ? "w-[100%] xl:w-[74%]" : "w-[100%] xl:w-[100%] "
@@ -547,7 +582,7 @@ export default function App() {
               <UserQuestionScreen
                 placeholder="Remote User's question"
                 confirmationModal={confirmationModal}
-                setConfirmationModal={confirmationHandler}
+                confirmationHandler={confirmationHandler}
               />
             </div>
           </div>

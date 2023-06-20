@@ -73,7 +73,7 @@ export default function UserQuestionScreen(props) {
               <button
                 className="h-min min-w-max text-sm font-semibold border-none bg-white text-black outline-none px-3 p-1 rounded-2xl flex flex-row items-center justify-center"
                 onClick={() => {
-                  props.setConfirmationModal(false);
+                  props.confirmationHandler("rejected");
                 }}
               >
                 no
@@ -81,7 +81,7 @@ export default function UserQuestionScreen(props) {
               <button
                 className="h-min min-w-max text-sm font-semibold border-none bg-white text-black outline-none px-3 p-1 rounded-2xl flex flex-row items-center justify-center"
                 onClick={() => {
-                  props.setConfirmationModal(false);
+                  props.confirmationHandler("approved");
                 }}
               >
                 Yes

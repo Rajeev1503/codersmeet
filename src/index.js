@@ -8,8 +8,8 @@ import { userContext } from "./context/user-context";
 import { CookiesProvider } from "react-cookie";
 
 function Root() {
-  const [userData, setUserData] = useState(null);
-  const [remoteUserData, setRemoteUserData] = useState(null);
+  const [userData, setUserData] = useState();
+  const [remoteUserData, setRemoteUserData] = useState();
   const [connectionState, setConnectionState] = useState(false);
 
   return (
