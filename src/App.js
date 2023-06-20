@@ -103,7 +103,8 @@ export default function App() {
       conn.on("open", function () {
         conn.on("data", function (data) {
           if (data.type == "message") {
-            setMessages((prev) => [...prev, data]);
+            console.log(data)
+            setMessages((prev) => [...prev, data.messageData]);
           } else if (data.type == "approval") {
             setConfirmationModal(true);
           } else if (data.type == "approved") {
