@@ -7,8 +7,6 @@ export default function ChatScreen(props) {
     e.target.messageInput.value = ''
   };
 
-  console.log(props?.messages)
-
   return (
     <div className="h-full flex flex-col justify-end px-4">
       {props.messages.length == 0 ? (

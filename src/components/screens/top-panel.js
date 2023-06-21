@@ -1,9 +1,5 @@
-import { BiMoon, BiUser } from "react-icons/bi";
-import { FiSettings } from "react-icons/fi";
 import { MdOutlineForum, MdLogin } from "react-icons/md";
 import Logo from "../logo";
-import { Link } from "react-router-dom";
-// import { useCookies } from "react-cookie";
 export default function TopPanel(props) {
   // const [cookie, setCookie, removeCookie] = useCookies(["token"]);
   return (
@@ -14,12 +10,14 @@ export default function TopPanel(props) {
           {/* <div className="cursor-pointer p-2 bg-white rounded-full">
             <BiMoon />
           </div> */}
-          <a href="https://codersmeetforum.vercel.app/" target="_blank" className="cursor-pointer p-2 bg-white rounded-full">
+          <a
+            href="https://codersmeetforum.vercel.app/"
+            target="_blank"
+            rel="noreferrer"
+            className="cursor-pointer p-2 bg-white rounded-full"
+          >
             <MdOutlineForum />
           </a>
-          <div className="cursor-pointer p-2 bg-white rounded-full">
-            <FiSettings />
-          </div>
           {/* <div className="cursor-pointer p-2 bg-white rounded-full">
             <BiUser />
           </div> */}

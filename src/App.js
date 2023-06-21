@@ -66,6 +66,7 @@ export default function App() {
       return;
     }
 
+    console.log("called")
     getuserMediaHandler();
     peer = new Peer(peerJsServerConfig);
 
@@ -103,7 +104,6 @@ export default function App() {
       conn.on("open", function () {
         conn.on("data", function (data) {
           if (data.type == "message") {
-            console.log(data)
             setMessages((prev) => [...prev, data.messageData]);
           } else if (data.type == "approval") {
             setConfirmationModal(true);
