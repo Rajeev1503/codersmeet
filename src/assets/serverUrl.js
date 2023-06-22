@@ -1,6 +1,6 @@
 const serverUrl =
   process.env.NODE_ENV === "development"
-    ? "https://codersmeetbackend.vercel.app"
+    ? "http://localhost:8080"
     : "https://codersmeetbackend.vercel.app";
 
     export default serverUrl;

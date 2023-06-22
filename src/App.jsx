@@ -13,7 +13,7 @@ import TopPanel from "./components/screens/top-panel";
 import serverUrl from "./assets/serverUrl";
 import UserQuestionScreen from "./components/screens/userQuestionScreen";
 import FriendQuestionScreen from "./components/screens/friendQuestionScreen";
-import axios, { Axios } from "axios";
+import axios from "axios";
 let peer,
   currentUserId,
   currentRemoteUserId,
@@ -66,7 +66,7 @@ export default function App() {
       return;
     }
 
-    console.log("called")
+    console.log("called");
     getuserMediaHandler();
     peer = new Peer(peerJsServerConfig);
 
@@ -182,17 +182,6 @@ export default function App() {
       });
   }
 
-  const callRemoteUser = async (remotePeerId) => {
-    mediaConnection = peer.call(remotePeerId, localStream);
-    dataConnection = peer.connect(remotePeerId);
-    mediaConnection.on("stream", (remoteStream) => {
-      currentRemoteUserId = remotePeerId;
-      connectionState = true;
-      getRemoteUserData(remotePeerId);
-      remoteVideoRef.current.srcObject = remoteStream;
-    });
-  };
-
   function getRemoteUserData(peerId) {
     fetch(`${serverUrl}/user/findbypeer`, {
       method: "POST",
@@ -212,6 +201,17 @@ export default function App() {
         console.log(err);
       });
   }
+
+  const callRemoteUser = async (remotePeerId) => {
+    mediaConnection = peer.call(remotePeerId, localStream);
+    dataConnection = peer.connect(remotePeerId);
+    mediaConnection.on("stream", (remoteStream) => {
+      currentRemoteUserId = remotePeerId;
+      connectionState = true;
+      getRemoteUserData(remotePeerId);
+      remoteVideoRef.current.srcObject = remoteStream;
+    });
+  };
 
   function nextUserHandler() {
     setRemoteUserData("");
@@ -395,22 +395,21 @@ export default function App() {
       formData.append("api_key", "386421548114291");
       formData.append("file", myFile);
       formData.append("upload_preset", "codersmeetforum");
-      upvoteUserHandler();
       axios
         .post(
           "https://api.cloudinary.com/v1_1/codersmeet/auto/upload",
           formData
         )
         .then((response) => {
-          fetch(`${serverUrl}/forum/uploadquestion`, {
+          fetch(`${serverUrl}/forum/uploadquestionandupvoteuser`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: cookie.token,
             },
             body: JSON.stringify({
               question: remoteUserDataGlobal.currentQuestion,
-              answer: response.data.url,
-              author: remoteUserDataGlobal.username,
+              answer: response.data.url
             }),
           }).catch((err) => {
             console.log(err);
@@ -420,25 +419,6 @@ export default function App() {
           console.log(error);
         });
     }
-  }
-
-  function upvoteUserHandler() {
-    fetch(`${serverUrl}/user/upvoteuser`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: cookie.token,
-      }
-    })
-      .then((res) => {
-        return res.json();
-      })
-      .then((response) => {
-        setUserData(response.data.user);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
   }
 
   // component functions and variables
