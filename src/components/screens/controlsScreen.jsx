@@ -46,6 +46,16 @@ export default function ControlsScreen(props) {
           {props.screenShareState ? <LuScreenShareOff /> : <LuScreenShare/>}
         </span>
       </div>
+      
+      <div
+        className="lg:hidden cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
+        onClick={props.setShowMobileChatBox}
+      >
+        <span className="text-xl">
+          <BiChat />
+        </span>
+      </div>
+
       <button
         className="cursor-pointer rounded-full p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-white text-black"
         onClick={() => {
@@ -58,7 +68,7 @@ export default function ControlsScreen(props) {
         </span>
       </button>
       <div
-        className="absolute right-0 cursor-pointer p-3 flex flex-row gap-1 items-center justify-center px-3 text-sm bg-transparent text-white"
+        className="hidden lg:flex absolute right-0 cursor-pointer p-3 flex-row gap-1 items-center justify-center px-3 text-sm bg-transparent text-white"
         onClick={props.setShowChatBox}
       >
         <span className="text-2xl">

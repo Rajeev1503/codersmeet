@@ -1,17 +1,21 @@
+import { useContext } from "react";
 import { FiSend } from "react-icons/fi";
+import { userContext } from "../../context/user-context";
 
 export default function ChatScreen(props) {
+  const { remoteUserData } = useContext(userContext);
+
   const sendMessageHandler = (e) => {
     e.preventDefault();
-    props.sendMessage("message",e.target.messageInput.value);
-    e.target.messageInput.value = ''
+    props.sendMessage("message", e.target.messageInput.value);
+    e.target.messageInput.value = "";
   };
 
   return (
     <div className="h-full flex flex-col justify-end px-4">
       {props.messages.length == 0 ? (
         <div className="w-full h-full flex flex-row justify-center items-center text-xl text-white">
-          Start messaging
+          {remoteUserData ? "Start messaging" : "Waiting for the connection"}
         </div>
       ) : (
         <div className="h-full w-full overflow-y-scroll">
@@ -52,6 +56,7 @@ export default function ChatScreen(props) {
             autoComplete="off"
             className="w-[95%] text-white px-3 outline-none bg-transparent data-[auto-complete]:bg-transparent"
             placeholder="Type your message"
+            disabled={remoteUserData?false:true}
           />
           <button type="onSubmit" className="w-[5%]">
             <FiSend />

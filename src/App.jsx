@@ -426,6 +426,8 @@ export default function App() {
   const [friendMaxLayout, setFriendMaxLayout] = useState(false);
   const [userMaxLayout, setUserMaxLayout] = useState(false);
   const [showChatBox, setShowChatBox] = useState(true);
+
+  const [showMobileChatBox, setShowMobileChatBox] = useState(false);
   const [initialLayout, setInitialLayout] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileModalData, setProfileModalData] = useState("");
@@ -456,6 +458,7 @@ export default function App() {
     setConfirmationModal(false);
     dataConnection.send({ type: type, message: `${type} your answer` });
   }
+  console.log(showMobileChatBox)
 
   return (
     <main className="bg-[#111] h-[100vh] w-full">
@@ -488,7 +491,7 @@ export default function App() {
             } transition-all duration-500 h-[92%] relative p-4 flex flex-col md:flex-row gap-1 items-center justify-center`}
           >
             {showProfileModal && (
-              <div className="absolute z-50">
+              <div className=" absolute z-50">
                 <div
                   className="cursor-pointer absolute top-2 right-3 text-white"
                   onClick={() => setShowProfileModal(false)}
@@ -552,6 +555,7 @@ export default function App() {
           <div className="h-[8%] w-full border-t border-[#222]">
             <ControlsScreen
               setShowChatBox={() => setShowChatBox(!showChatBox)}
+              setShowMobileChatBox={ ()=> setShowMobileChatBox(!showMobileChatBox)}
               initialLayoutHandler={() => {
                 initialLayoutHandler();
               }}
@@ -566,11 +570,11 @@ export default function App() {
           </div>
         </div>
         <div
-          className={`${
-            showChatBox ? "hidden xl:flex flex-col gap-2 xl:w-[26%]" : "w-0 "
-          } hidden xl:block overflow-hidden transition-all duration-500 h-full `}
+          className={`${showMobileChatBox? 'p-4 lg-hidden absolute top-0 bg-[#111] w-full h-[90%] flex flex-col gap-2' :
+            showChatBox ? "hidden lg:flex flex-col gap-2 xl:w-[26%]" : "w-0 "
+          } overflow-hidden transition-all duration-500 h-full `}
         >
-          <div className="flex flex-col gap-1 flex-grow max-h-[25%] w-full border-b border-[#222]">
+          <div className="flex flex-col gap-1 flex-grow max-h-[30%] lg:max-h-[25%] w-full border-b border-[#222]">
             <div className="relative py-1 h-1/2 px-2 flex flex-col gap-2 justify-start items-start border-b border-[#222]">
               <span className="text-xs text-[#aaa]">
                 Remote user's question
