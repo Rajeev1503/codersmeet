@@ -31,9 +31,11 @@ export default function UserScreen({
             autoPlay
           ></video>
           <div
-            className={`${
-              props.videoState && "hidden"
-            } border border-white aspect-[9/16] xl:aspect-[16/9] h-full w-full flex flex-row justify-center items-center text-white text-6xl`}
+            className={`text-white flex justify-center items-center text-5xl ${props.videoState && "hidden"} ${
+              initialLayout
+                ? "aspect-[16/9]"
+                : "aspect-[9/16] xl:aspect-[16/9]"
+            }  border border-white object-cover h-[99%] w-[99%]`}
           >
             <BiCameraOff />
           </div>

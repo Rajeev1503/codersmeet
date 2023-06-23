@@ -13,7 +13,8 @@ import serverUrl from "./assets/serverUrl";
 export default function Auth() {
   // const { isLoggedIn, setIsLoggedIn ,setUserToken } =
   //   useContext(userContext);
-    const [cookie, setCookie, removeCookie] = useCookies(['token']);
+  const [cookie, setCookie, removeCookie] = useCookies(["token"]);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function Auth() {
   const fieldsList = fieldsListJson.fields;
 
   const loginFormHandler = (e) => {
+    setLoading(true);
     const formData = {
       usernameoremail: e.target.usernameoremail.value,
       password: e.target.password.value,
@@ -54,15 +56,16 @@ export default function Auth() {
         throw new Error("Something wrong");
       })
       .then((resjson) => {
-        setCookie('token',resjson.data.token)
-        console.log(cookie)
-        return navigate('/')
+        setCookie("token", resjson.data.token);
+        setLoading(false);
+        return navigate("/");
       })
       .catch((err) => {
         console.log(err);
       });
   };
   const signupFormHandler = (e) => {
+    setLoading(true);
     const formData = {
       fullname: e.target.fullname.value,
       username: e.target.username.value,
@@ -85,8 +88,9 @@ export default function Auth() {
         throw new Error("Something wrong");
       })
       .then((resjson) => {
-        setCookie('token', resjson.data.token)
-        return navigate('/')
+        setCookie("token", resjson.data.token);
+        setLoading(false);
+        return navigate("/");
       })
       .catch((err) => {
         console.log(err);
@@ -104,10 +108,10 @@ export default function Auth() {
         <h1 className="text-center text-2xl font-semibold text-white">
           CodersMeet
         </h1>
-        <div className="h-[80%] border-2 border-[#222] w-[70%] p-4 rounded-2xl flex flex-row justify-center items-center">
-          <div className="w-1/2">
+        <div className="h-[80%] border-2 overflow-y-scroll border-[#222] w-[90%] lg:w-[70%] p-4 rounded-2xl flex flex-col lg:flex-row lg:justify-center items-center">
+          <div className="w-full lg:w-1/2">
             <form
-              className="w-full flex flex-col gap-4 items-center justify-center max-w-max p-4 rounded-lg"
+              className="w-full flex flex-col gap-4 items-center justify-center p-4 rounded-lg"
               onSubmit={(e) => {
                 e.preventDefault();
                 loginFormHandler(e);
@@ -116,24 +120,22 @@ export default function Auth() {
               <InputBox
                 name="usernameoremail"
                 type="text"
-                id={"username"}
                 label={"Username"}
               />
               <InputBox
                 name="password"
                 type="password"
-                id={"Password"}
                 label={"Password"}
               />
               <button
                 type="submit"
                 className="bg-white text-black rounded-lg px-3 p-1 mt-8 font-semibold"
               >
-                SignIn
+                {loading ? "Loading..." : "Sign In"}
               </button>
             </form>
           </div>
-          <div className="w-1/2">
+          <div className="w-full lg:w-1/2">
             <form
               className="w-full flex flex-col gap-4 items-center justify-center max-w-max p-4 rounded-lg"
               onSubmit={(e) => {
@@ -178,11 +180,13 @@ export default function Auth() {
 
               <InputBox
                 type="password"
+                name="reenter password"
                 id={"Re-Type Password"}
                 label={"Re-Type Password"}
               />
               <button className="bg-white text-black rounded-lg px-8 p-1 mt-8 font-semibold">
-                Signup
+                
+              {loading ? "Loading..." : "Sign Up"}
               </button>
             </form>
           </div>
