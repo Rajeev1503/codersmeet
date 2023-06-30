@@ -1,5 +1,3 @@
-import { useContext, useEffect } from "react";
-import { userContext } from "../../context/user-context";
 
 export default function UserProfile(props) {
   return (
@@ -15,7 +13,7 @@ export default function UserProfile(props) {
             <span className="lowercase">(@{props.userData.username})</span></div>
             <div>About: Hello I am a web developer </div>
             <div>Total Upvotes: {props.userData.upvotes}</div>
-            <div><span>Teaching Reviews: &#9733;&#9733;&#9733;&#9733;&#9734; </span><span>(1.2k reviews)</span></div>
+            {/* <div><span>Teaching Reviews: &#9733;&#9733;&#9733;&#9733;&#9734; </span><span>(1.2k reviews)</span></div> */}
           </div>
         </div>
         <div className="w-full lg:w-2/3 flex flex-col gap-8 justify-start items-start p-4">

@@ -1,8 +1,8 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { FiSend } from "react-icons/fi";
 import { userContext } from "../../context/user-context";
 
-export default function ChatScreen(props) {
+const ChatScreen = (props) => {
   const { remoteUserData } = useContext(userContext);
 
   const sendMessageHandler = (e) => {
@@ -10,7 +10,6 @@ export default function ChatScreen(props) {
     props.sendMessage("message", e.target.messageInput.value);
     e.target.messageInput.value = "";
   };
-
   return (
     <div className="h-full flex flex-col justify-end px-4">
       {props.messages.length == 0 ? (
@@ -66,3 +65,5 @@ export default function ChatScreen(props) {
     </div>
   );
 }
+
+export default React.memo(ChatScreen);

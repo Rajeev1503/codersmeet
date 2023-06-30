@@ -1,14 +1,10 @@
-// import { useEffect, useRef } from "react";
-
 import { useContext } from "react";
-import { BiCamera, BiCameraOff } from "react-icons/bi";
+import { BiCameraOff } from "react-icons/bi";
 import { userContext } from "../../context/user-context";
 
 export default function UserScreen({
   layoutValues: {
     initialLayout,
-    showChatBox,
-    friendMaxLayout,
     userMaxLayout,
     setInitialLayout,
     setFriendMaxLayout,
@@ -16,7 +12,8 @@ export default function UserScreen({
   },
   ...props
 }) {
-  const { userData, setUserData } = useContext(userContext);
+  const { userData } = useContext(userContext);
+
   return (
     <div className="relative h-full w-full flex flex-col items-center justify-center pt-2">
       <div className=" p-2 px-2 w-full">

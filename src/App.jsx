@@ -458,7 +458,6 @@ export default function App() {
     setConfirmationModal(false);
     dataConnection.send({ type: type, message: `${type} your answer` });
   }
-  console.log(showMobileChatBox)
 
   return (
     <main className="bg-[#111] h-[100vh] w-full">

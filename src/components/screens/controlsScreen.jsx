@@ -5,13 +5,14 @@ import {
   BiMicrophone,
   BiMicrophoneOff,
 } from "react-icons/bi";
-import { CgScreen } from "react-icons/cg";
 import { BsLayoutSplit } from "react-icons/bs";
 import { RxTrackNext } from "react-icons/rx";
 import {LuScreenShare, LuScreenShareOff} from 'react-icons/lu'
 import {TbArrowsDiff} from 'react-icons/tb'
 
 export default function ControlsScreen(props) {
+  
+
   return (
     <div className="relative h-full w-full flex flex-row flex-wrap gap-3 justify-center items-center p-2">
       <div

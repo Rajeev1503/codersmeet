@@ -1,20 +1,19 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import skillsListJson from "./assets/skillsList.json";
 import fieldsListJson from "./assets/fieldsList.json";
 import InputBox from "./components/formComponents/inputBox";
 import CustomRadioBox from "./components/formComponents/customRadioBox";
 import SelectBox from "./components/formComponents/selectBox";
 import Logo from "./components/logo";
-import { userContext } from "./context/user-context";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import serverUrl from "./assets/serverUrl";
 
 export default function Auth() {
-  // const { isLoggedIn, setIsLoggedIn ,setUserToken } =
-  //   useContext(userContext);
   const [cookie, setCookie, removeCookie] = useCookies(["token"]);
-  const [loading, setLoading] = useState(false);
+  const [signinLoading, setSigninLoading] = useState(false);
+
+  const [signupLoading, setSignupLoading] = useState(false);
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -37,7 +36,7 @@ export default function Auth() {
   const fieldsList = fieldsListJson.fields;
 
   const loginFormHandler = (e) => {
-    setLoading(true);
+    setSigninLoading(true);
     const formData = {
       usernameoremail: e.target.usernameoremail.value,
       password: e.target.password.value,
@@ -57,7 +56,7 @@ export default function Auth() {
       })
       .then((resjson) => {
         setCookie("token", resjson.data.token);
-        setLoading(false);
+        setSigninLoading(false);
         return navigate("/");
       })
       .catch((err) => {
@@ -65,7 +64,7 @@ export default function Auth() {
       });
   };
   const signupFormHandler = (e) => {
-    setLoading(true);
+    setSignupLoading(true);
     const formData = {
       fullname: e.target.fullname.value,
       username: e.target.username.value,
@@ -89,7 +88,7 @@ export default function Auth() {
       })
       .then((resjson) => {
         setCookie("token", resjson.data.token);
-        setLoading(false);
+        setSignupLoading(false);
         return navigate("/");
       })
       .catch((err) => {
@@ -117,21 +116,13 @@ export default function Auth() {
                 loginFormHandler(e);
               }}
             >
-              <InputBox
-                name="usernameoremail"
-                type="text"
-                label={"Username"}
-              />
-              <InputBox
-                name="password"
-                type="password"
-                label={"Password"}
-              />
+              <InputBox name="usernameoremail" type="text" label={"Username"} />
+              <InputBox name="password" type="password" label={"Password"} />
               <button
                 type="submit"
                 className="bg-white text-black rounded-lg px-3 p-1 mt-8 font-semibold"
               >
-                {loading ? "Loading..." : "Sign In"}
+                {signinLoading ? "Loading..." : "Sign In"}
               </button>
             </form>
           </div>
@@ -185,8 +176,7 @@ export default function Auth() {
                 label={"Re-Type Password"}
               />
               <button className="bg-white text-black rounded-lg px-8 p-1 mt-8 font-semibold">
-                
-              {loading ? "Loading..." : "Sign Up"}
+                {signupLoading ? "Loading..." : "Sign Up"}
               </button>
             </form>
           </div>

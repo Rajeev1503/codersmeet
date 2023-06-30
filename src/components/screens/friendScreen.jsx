@@ -15,6 +15,7 @@ export default function FriendScreen({
   ...props
 }) {
   const { remoteUserData } = useContext(userContext);
+
   return (
     <div className="h-full w-full flex flex-col items-center justify-center pt-2">
       <div className="p-2 px-2 w-full">
