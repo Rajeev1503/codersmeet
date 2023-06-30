@@ -39,7 +39,7 @@ export default function FriendScreen({
         <div className="text-white text-sm font-semibold">
           {remoteUserData ? (
             <div className="flex flex-row gap-2">
-              <div onClick={()=>props.showProfileModalHandler('remoteUser')}>
+              <div className="cursor-pointer" onClick={()=>props.showProfileModalHandler('remoteUser')}>
               <span className="capitalize">{remoteUserData.fullname} </span>
               <span className=" lowercase">
                 ({remoteUserData.username})

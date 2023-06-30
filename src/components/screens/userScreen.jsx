@@ -43,7 +43,7 @@ export default function UserScreen({
           initialLayout ? "" : userMaxLayout ? "" : "hidden"
         } flex flex-row justify-center items-center gap-2 p-1`}
       >
-        <div className="text-white p-1">
+        <div className="text-white p-1 cursor-pointer">
           <div className="text-white text-sm font-semibold">
             {userData ? (
               <div onClick={() => props.showProfileModalHandler("user")}>

@@ -64,9 +64,9 @@ export default function ControlsScreen(props) {
         }}
         disabled={props.userChanged}
       >
-        <span className="text-xl">
-          <RxTrackNext />
-        </span>
+        <div className="flex items-center justify-center gap-2 font-semibold">
+          <span className="text-xl"><RxTrackNext /></span> <span>Next</span>
+        </div>
       </button>
       <div
         className="hidden lg:flex absolute right-0 cursor-pointer p-3 flex-row gap-1 items-center justify-center px-3 text-sm bg-transparent text-white"
